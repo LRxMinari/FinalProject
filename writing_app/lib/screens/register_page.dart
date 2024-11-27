@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart'; // นำเข้า LoginPage
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -41,7 +42,7 @@ class _RegisterPageState extends State<RegisterPage> {
       emailError = emailController.text.isNotEmpty
           ? !RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
                   .hasMatch(emailController.text)
-              ? 'กรุณากรอกอีเมลที่ถูกต้อง'
+              ? 'รูปแบบอีเมล์ไม่ถูกต้อง'
               : ''
           : '';
       passwordError = passwordController.text.isNotEmpty
@@ -175,9 +176,21 @@ class _RegisterPageState extends State<RegisterPage> {
                         emailError.isEmpty &&
                         passwordError.isEmpty &&
                         confirmPasswordError.isEmpty) {
+                      // แสดง SnackBar แจ้งเตือน
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("สมัครสมาชิกสำเร็จ")),
+                        const SnackBar(
+                          content: Text('สมัครสมาชิกสำเร็จ'),
+                        ),
                       );
+                      // หลังจากแสดง SnackBar แล้วไปยังหน้า LoginPage
+                      Future.delayed(const Duration(seconds: 2), () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginPage(),
+                          ),
+                        );
+                      });
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
