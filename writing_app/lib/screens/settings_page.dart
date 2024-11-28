@@ -151,7 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                   child: const Text('ออกจากการตั้งค่า'),
                   style: ElevatedButton.styleFrom(
-                    primary: const Color(0xFFD6CFC7),
+                    backgroundColor: const Color(0xFFD6CFC7),
                   ),
                 ),
               ],

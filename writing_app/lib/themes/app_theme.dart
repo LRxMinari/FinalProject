@@ -9,7 +9,7 @@ class AppTheme {
     scaffoldBackgroundColor: backgroundColor,
     primaryColor: primaryColor,
     textTheme: const TextTheme(
-      bodyText1: TextStyle(color: textColor),
+      bodyLarge: TextStyle(color: textColor),
     ),
   );
 }

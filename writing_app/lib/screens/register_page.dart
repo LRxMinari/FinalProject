@@ -200,7 +200,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                   child: const Text('สมัครสมาชิก'),
                   style: ElevatedButton.styleFrom(
-                    primary: const Color(0xFFD6CFC7), // สีของปุ่ม
+                    backgroundColor: const Color(0xFFD6CFC7), // สีของปุ่ม
                   ),
                 ),
               ),

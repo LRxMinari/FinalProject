@@ -90,7 +90,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    primary: const Color(0xFFD6CFC7),
+                    backgroundColor: const Color(0xFFD6CFC7),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 32, vertical: 12),
                   ),
