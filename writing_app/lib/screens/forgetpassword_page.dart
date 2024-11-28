@@ -4,10 +4,10 @@ class ForgetPasswordPage extends StatefulWidget {
   const ForgetPasswordPage({Key? key}) : super(key: key);
 
   @override
-  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
+  _ForgetPasswordPageState createState() => _ForgetPasswordPageState();
 }
 
-class _ForgotPasswordPageState extends State<ForgetPasswordPage> {
+class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   final TextEditingController _emailController = TextEditingController();
   String? _emailError; // ใช้เก็บข้อความแสดงข้อผิดพลาดของอีเมล
 
