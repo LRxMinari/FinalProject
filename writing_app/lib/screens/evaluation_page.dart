@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'language_selection_page.dart'; // นำเข้าหน้าเลือกหมวดหมู่
 
 class EvaluationPage extends StatelessWidget {
   final String character;
@@ -32,7 +33,6 @@ class EvaluationPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // คำว่าการประเมินผล
             const Text(
               'การประเมินผล',
               style: TextStyle(
@@ -53,7 +53,6 @@ class EvaluationPage extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // ตัวอักษรที่ฝึกเขียน
                       Text(
                         'ตัวอักษร: $character',
                         style: const TextStyle(
@@ -62,7 +61,6 @@ class EvaluationPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // คะแนนที่ได้
                       Text(
                         'คะแนน: ${score.toStringAsFixed(1)}%',
                         style: const TextStyle(
@@ -70,7 +68,6 @@ class EvaluationPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // จำนวนดาวที่ได้
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
@@ -84,7 +81,6 @@ class EvaluationPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // ข้อเสนอแนะ
                       Text(
                         'ข้อเสนอแนะ: $feedback',
                         style: const TextStyle(
@@ -94,14 +90,18 @@ class EvaluationPage extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
-                      // ปุ่มการกระทำ
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           ElevatedButton(
                             onPressed: () {
-                              // กดเพื่อฝึกเขียนใหม่
-                              Navigator.pop(context);
+                              // นำผู้ใช้ไปที่หน้า LanguageSelectionPage
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LanguageSelectionPage(),
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.purple[400],
@@ -110,9 +110,8 @@ class EvaluationPage extends StatelessWidget {
                           ),
                           ElevatedButton(
                             onPressed: () {
-                              // กลับไปหน้าแรก
-                              Navigator.popUntil(
-                                  context, (route) => route.isFirst);
+                              Navigator.popUntil(context,
+                                  (route) => route.isFirst); // กลับหน้าแรก
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green[400],

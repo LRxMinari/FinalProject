@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'writing_practice_page.dart'; // นำเข้าหน้าฝึกเขียน
 
 class LanguageSelectionPage extends StatefulWidget {
   const LanguageSelectionPage({Key? key}) : super(key: key);
@@ -38,9 +39,9 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                 ),
               ),
               const SizedBox(height: 32),
-              _buildLanguageButton('ภาษาไทย', Icons.language),
+              _buildLanguageButton('ภาษาไทย', Icons.language, 'ก'),
               const SizedBox(height: 16),
-              _buildLanguageButton('English', Icons.translate),
+              _buildLanguageButton('English', Icons.translate, 'A'),
             ],
           ),
         ),
@@ -49,12 +50,20 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   }
 
   // ฟังก์ชันสร้างปุ่มภาษา
-  Widget _buildLanguageButton(String language, IconData icon) {
+  Widget _buildLanguageButton(
+      String language, IconData icon, String character) {
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedLanguage = language;
-        });
+        // เปลี่ยนไปที่ WritingPracticePage พร้อมส่งค่าภาษาที่เลือกและตัวอักษรที่ต้องการฝึก
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WritingPracticePage(
+              language: language, // ส่งภาษาที่เลือก
+              character: character, // ส่งตัวอักษรที่ต้องการฝึก
+            ),
+          ),
+        );
       },
       child: Column(
         children: [

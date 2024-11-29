@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'language_selection_page.dart';
 import 'evaluation_page.dart'; // นำเข้าหน้าจอการประเมินผล
+import 'settings_page.dart'; // นำเข้าหน้าตั้งค่า
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -16,6 +17,13 @@ class HomePage extends StatelessWidget {
             icon: const Icon(Icons.settings),
             onPressed: () {
               // เปิดหน้าการตั้งค่า
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const SettingsPage(), // นำผู้ใช้ไปที่หน้า SettingsPage
+                ),
+              );
             },
           ),
         ],
@@ -38,6 +46,7 @@ class HomePage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // ปุ่มสำหรับประเมินผล
                   Column(
                     children: [
                       CircleAvatar(
@@ -65,6 +74,7 @@ class HomePage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(width: 16),
+                  // ปุ่มสำหรับฝึกเขียน
                   Column(
                     children: [
                       CircleAvatar(
@@ -77,7 +87,7 @@ class HomePage extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const LanguageSelectionPage(),
+                                    const LanguageSelectionPage(), // ไปยังหน้าฝึกเขียน
                               ),
                             );
                           },
