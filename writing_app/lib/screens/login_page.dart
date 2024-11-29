@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'home_page.dart'; // นำเข้าไฟล์ HomePage
 import 'register_page.dart'; // นำเข้าไฟล์ Register Page
 import 'forgetpassword_page.dart'; // นำเข้าไฟล์ Forget Password Page
-import 'home_page.dart'; // นำเข้าไฟล์ HomePage
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -15,6 +15,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   String? _emailError;
   String? _passwordError;
+  bool _isPasswordVisible = false; // สถานะแสดง/ซ่อนรหัสผ่าน
+  bool _isLoading = false; // สถานะการโหลด
 
   // ฟังก์ชันสำหรับตรวจสอบรูปแบบอีเมล
   bool _isValidEmail(String email) {
@@ -51,6 +53,31 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // ฟังก์ชันจัดการการล็อกอิน
+  void _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // จำลองการรอการเชื่อมต่อ
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (_emailError == null && _passwordError == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("กรุณากรอกข้อมูลให้ถูกต้อง")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'E-mail',
                   filled: true,
                   fillColor: const Color(0xFFECE4D6),
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   errorText: _emailError, // แสดงข้อผิดพลาดอีเมล
                 ),
                 onChanged: (value) {
@@ -88,13 +115,25 @@ class _LoginPageState extends State<LoginPage> {
               // ช่องกรอกรหัสผ่าน
               TextField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   labelText: 'Password',
                   filled: true,
                   fillColor: const Color(0xFFECE4D6),
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   errorText: _passwordError, // แสดงข้อผิดพลาดรหัสผ่าน
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
                 onChanged: (value) {
                   // ตรวจสอบรหัสผ่านเมื่อกรอกข้อมูล
@@ -102,27 +141,15 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
               const SizedBox(height: 16),
+              // ปุ่มล็อกอิน
               ElevatedButton(
-                onPressed: () {
-                  // ตรวจสอบว่าทุกอย่างถูกต้องก่อนที่ไปหน้า HomePage
-                  if (_emailError == null && _passwordError == null) {
-                    // ถ้าทุกอย่างถูกต้องแล้ว ให้ไปที่หน้า HomePage
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const HomePage()),
-                    );
-                  } else {
-                    // ถ้ามีข้อผิดพลาดแสดงข้อความ
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text("กรุณากรอกข้อมูลให้ถูกต้อง")),
-                    );
-                  }
-                },
+                onPressed: _isLoading ? null : _login,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD6CFC7),
                 ),
-                child: const Text('Login'),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Login'),
               ),
               const SizedBox(height: 16),
               Row(

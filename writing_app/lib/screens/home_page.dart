@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'settings_page.dart'; // นำเข้าไฟล์ SettingsPage
+import 'language_selection_page.dart';
+import 'evaluation_page.dart'; // นำเข้าหน้าจอการประเมินผล
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -14,13 +15,7 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              // เมื่อคลิกที่ปุ่มตั้งค่า จะไปยังหน้า Settings
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
-                ),
-              );
+              // เปิดหน้าการตั้งค่า
             },
           ),
         ],
@@ -33,7 +28,7 @@ class HomePage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
-                'Welcome to Home Page',
+                'Practice Writing',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -48,7 +43,23 @@ class HomePage extends StatelessWidget {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: const Color(0xFFECE4D6),
-                        child: Icon(Icons.pets, size: 40),
+                        child: IconButton(
+                          icon: const Icon(Icons.pets),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EvaluationPage(
+                                  character: 'ก',
+                                  score: 85.0,
+                                  stars: 4,
+                                  feedback:
+                                      'ดีมาก! ลองปรับการเขียนหัวตัวอักษรให้คมขึ้น.',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       const Text('ประเมินผลลัพธ์'),
                     ],
@@ -59,7 +70,18 @@ class HomePage extends StatelessWidget {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: const Color(0xFFECE4D6),
-                        child: Icon(Icons.edit, size: 40),
+                        child: IconButton(
+                          icon: const Icon(Icons.edit), // ปุ่ม "ฝึกเขียน"
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const LanguageSelectionPage(),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       const Text('ฝึกเขียน'),
                     ],

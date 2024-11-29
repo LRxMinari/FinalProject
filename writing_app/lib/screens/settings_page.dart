@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart'; // นำเข้า LoginPage
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -34,7 +35,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // เพลงประประกอบ
+            // เพลงประกอบ
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -141,18 +142,24 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
             const Divider(),
-            // ปิดการตั้งค่า
+            // ปุ่มออกจากระบบ
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context); // ปุ่มออกจากหน้าการตั้งค่า
+                    // ใช้ pushAndRemoveUntil เพื่อเคลียร์ Stack และไปหน้า LoginPage
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginPage()),
+                      (Route<dynamic> route) => false, // เคลียร์ Stack ทั้งหมด
+                    );
                   },
-                  child: const Text('ออกจากการตั้งค่า'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD6CFC7),
                   ),
+                  child: const Text('ออกจากระบบ'),
                 ),
               ],
             ),
