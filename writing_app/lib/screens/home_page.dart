@@ -58,7 +58,7 @@ class HomePage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => EvaluationPage(
+                                builder: (context) => const EvaluationPage(
                                   character: 'ก',
                                   score: 85.0,
                                   stars: 4,

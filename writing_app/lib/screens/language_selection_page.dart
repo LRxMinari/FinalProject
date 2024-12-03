@@ -9,7 +9,7 @@ class LanguageSelectionPage extends StatefulWidget {
 }
 
 class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
-  String _selectedLanguage = 'ภาษาไทย'; // ค่าเริ่มต้นของภาษาที่เลือก
+  String? _selectedLanguage;
 
   @override
   Widget build(BuildContext context) {
@@ -49,18 +49,20 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
     );
   }
 
-  // ฟังก์ชันสร้างปุ่มภาษา
+// ฟังก์ชันสร้างปุ่มภาษา
   Widget _buildLanguageButton(
       String language, IconData icon, String character) {
     return GestureDetector(
       onTap: () {
-        // เปลี่ยนไปที่ WritingPracticePage พร้อมส่งค่าภาษาที่เลือกและตัวอักษรที่ต้องการฝึก
+        setState(() {
+          _selectedLanguage = language; // อัปเดตภาษาที่เลือก
+        });
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => WritingPracticePage(
-              language: language, // ส่งภาษาที่เลือก
-              character: character, // ส่งตัวอักษรที่ต้องการฝึก
+              language: language,
+              character: character,
             ),
           ),
         );
@@ -69,9 +71,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
         children: [
           CircleAvatar(
             radius: 40,
-            backgroundColor: _selectedLanguage == language
-                ? Colors.lightGreenAccent
-                : const Color(0xFFECE4D6),
+            backgroundColor: const Color(0xFFECE4D6),
             child: Icon(
               icon,
               size: 30,

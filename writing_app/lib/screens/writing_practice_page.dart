@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'evaluation_page.dart'; // นำเข้าหน้าประเมินผล
+import 'dart:ui';
 
 class WritingPracticePage extends StatefulWidget {
   final String language;
@@ -120,7 +121,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
             Navigator.pop(context);
           },
         ),
-        title: Text('ฝึกเขียน ($_character)'),
       ),
       backgroundColor: const Color(0xFFFDF6E4),
       body: Center(
@@ -185,34 +185,24 @@ class MyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // 1. สร้างตัวอักษรลายน้ำ
-    final textStyle = TextStyle(
-      fontSize: size.width * 0.6, // ขนาดตัวอักษร
-      color: Colors.black, // ใช้เป็นสีเพื่อสร้าง Path
-    );
-
     final textPainter = TextPainter(
-      text: TextSpan(text: character, style: textStyle),
+      text: TextSpan(
+        text: character,
+        style: TextStyle(
+          fontSize: size.width * 0.6,
+          color: Colors.grey.withOpacity(0.4), // สีลายน้ำ
+        ),
+      ),
       textDirection: TextDirection.ltr,
     );
 
     textPainter.layout();
-    final textOffset = Offset(
+    final offset = Offset(
       (size.width - textPainter.width) / 2,
       (size.height - textPainter.height) / 2,
     );
 
-    // สร้าง Path จากตัวอักษร
-    final path = Path();
-    textPainter.paint(canvas, textOffset);
-    path.addRect(textOffset & textPainter.size);
-
-    // วาดเส้นรอยปะรอบตัวอักษร
-    final dashPaint = Paint()
-      ..color = Colors.grey // สีรอยปะ
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    _drawDashedPath(canvas, path, dashPaint);
+    textPainter.paint(canvas, offset);
 
     // 2. วาดเส้นจากการลากของผู้ใช้
     final paint = Paint()
@@ -223,25 +213,6 @@ class MyPainter extends CustomPainter {
     for (int i = 0; i < points.length - 1; i++) {
       if (points[i] != null && points[i + 1] != null) {
         canvas.drawLine(points[i]!, points[i + 1]!, paint);
-      }
-    }
-  }
-
-  // ฟังก์ชันวาดรอยปะ
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    final pathMetrics = path.computeMetrics();
-    for (final metric in pathMetrics) {
-      double dashLength = 10.0; // ความยาวของแต่ละขีด
-      double gapLength = 5.0; // ระยะห่างระหว่างขีด
-      double distance = 0.0;
-
-      while (distance < metric.length) {
-        final segment = metric.extractPath(
-          distance,
-          distance + dashLength,
-        );
-        canvas.drawPath(segment, paint);
-        distance += dashLength + gapLength;
       }
     }
   }

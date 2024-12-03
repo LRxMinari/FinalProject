@@ -99,7 +99,8 @@ class EvaluationPage extends StatelessWidget {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => LanguageSelectionPage(),
+                                  builder: (context) =>
+                                      const LanguageSelectionPage(),
                                 ),
                               );
                             },
