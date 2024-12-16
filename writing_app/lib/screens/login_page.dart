@@ -101,6 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'E-mail',
+                  hintText: 'กรุณากรอกอีเมล',
                   filled: true,
                   fillColor: const Color(0xFFECE4D6),
                   border: const OutlineInputBorder(),
@@ -118,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   labelText: 'Password',
+                  hintText: 'กรุณากรอกรหัสผ่าน',
                   filled: true,
                   fillColor: const Color(0xFFECE4D6),
                   border: const OutlineInputBorder(),

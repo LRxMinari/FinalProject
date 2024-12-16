@@ -38,7 +38,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Please enter your registered email address.',
+                  'กรุณากรอกที่อยู่อีเมลที่คุณลงทะเบียน',
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                   textAlign: TextAlign.center,
                 ),
