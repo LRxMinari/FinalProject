@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_page.dart'; // นำเข้าไฟล์ HomePage
 import 'register_page.dart'; // นำเข้าไฟล์ Register Page
 import 'forgetpassword_page.dart'; // นำเข้าไฟล์ Forget Password Page
+import 'package:firebase_auth/firebase_auth.dart'; // เพิ่มการนำเข้า FirebaseAuth
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -53,27 +54,30 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // ฟังก์ชันจัดการการล็อกอิน
+   // ฟังก์ชันจัดการการล็อกอิน
   void _login() async {
     setState(() {
       _isLoading = true;
     });
 
-    // จำลองการรอการเชื่อมต่อ
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // ใช้งาน Firebase Authentication สำหรับการล็อกอิน
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (_emailError == null && _passwordError == null) {
+      // การล็อกอินสำเร็จ
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomePage()),
       );
-    } else {
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("กรุณากรอกข้อมูลให้ถูกต้อง")),
+        SnackBar(content: Text(e.message ?? 'เกิดข้อผิดพลาด')),
       );
     }
   }

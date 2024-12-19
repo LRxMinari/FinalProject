@@ -64,4 +64,16 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+buildscript {
+    repositories {
+        google()  // ใช้ repository จาก Google
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.gms:google-services:4.3.15'  // เพิ่มการพึ่งพา Google Services ที่นี่
+    }
+}
+
+
+// เพื่อใช้งาน Google Services Plugin
+apply plugin: 'com.google.gms.google-services' 

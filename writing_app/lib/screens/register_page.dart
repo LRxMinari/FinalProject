@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart'; // นำเข้า LoginPage
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -9,13 +12,15 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController surnameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
 
   String nameError = '';
   String surnameError = '';
@@ -23,6 +28,8 @@ class _RegisterPageState extends State<RegisterPage> {
   String emailError = '';
   String passwordError = '';
   String confirmPasswordError = '';
+
+   bool _isPasswordVisible = false;
 
   // ฟังก์ชันสำหรับตรวจสอบข้อมูลในแต่ละช่อง
   void _validateField() {
@@ -50,11 +57,11 @@ class _RegisterPageState extends State<RegisterPage> {
               ? 'กรุณากรอกรหัสผ่าน'
               : ''
           : '';
-      confirmPasswordError = confirmPasswordController.text.isNotEmpty
-          ? confirmPasswordController.text != passwordController.text
+      confirmPasswordError = confirmPasswordController.text.isEmpty
+          ? 'กรุณากรอกยืนยันรหัสผ่าน'
+          : confirmPasswordController.text != passwordController.text
               ? 'รหัสผ่านไม่ตรงกัน'
-              : ''
-          : '';
+              : '';
     });
   }
 
@@ -96,6 +103,51 @@ class _RegisterPageState extends State<RegisterPage> {
       ],
     );
   }
+
+  // ฟังก์ชันสำหรับการสมัครสมาชิกโดยใช้ Firebase
+  void _register() async {
+    try {
+      // ตรวจสอบว่าไม่มีข้อผิดพลาดในข้อมูลที่กรอก
+      if (nameError.isEmpty &&
+          surnameError.isEmpty &&
+          phoneError.isEmpty &&
+          emailError.isEmpty &&
+          passwordError.isEmpty &&
+          confirmPasswordError.isEmpty) {
+        // สมัครสมาชิกผู้ใช้กับ Firebase
+        await _auth.createUserWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+
+        // แสดงข้อความเมื่อสมัครสมาชิกสำเร็จ
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('สมัครสมาชิกสำเร็จ')),
+        );
+
+        // นำทางไปยังหน้าล็อกอินหลังจากสมัครสมาชิกสำเร็จ
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LoginPage(),
+            ),
+          );
+        });
+      } else {
+        // แสดงข้อความหากข้อมูลไม่ถูกต้อง
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('กรุณากรอกข้อมูลให้ถูกต้อง')),
+        );
+      }
+    } catch (e) {
+      // แสดงข้อความเมื่อเกิดข้อผิดพลาด
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -168,36 +220,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    // ตรวจสอบข้อมูลทั้งหมดเมื่อกดปุ่ม
-                    if (nameError.isEmpty &&
-                        surnameError.isEmpty &&
-                        phoneError.isEmpty &&
-                        emailError.isEmpty &&
-                        passwordError.isEmpty &&
-                        confirmPasswordError.isEmpty) {
-                      // แสดง SnackBar แจ้งเตือน
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('สมัครสมาชิกสำเร็จ'),
-                        ),
-                      );
-                      // หลังจากแสดง SnackBar แล้วไปยังหน้า LoginPage
-                      Future.delayed(const Duration(seconds: 2), () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
-                          ),
-                        );
-                      });
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text("กรุณากรอกข้อมูลให้ถูกต้อง")),
-                      );
-                    }
-                  },
+                  onPressed: _register, // เรียกใช้ฟังก์ชันสมัครสมาชิก
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD6CFC7), // สีของปุ่ม
                   ),

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "260907241160",
+    "project_id": "practice-writing-app",
+    "storage_bucket": "practice-writing-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260907241160:android:7ca28b04015fd8704edffd",
+        "android_client_info": {
+          "package_name": "com.example.practicewriting"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwJhAXhveXdvbRMtPW1AztSvJfHFuvFgU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
