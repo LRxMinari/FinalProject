@@ -106,47 +106,70 @@ class _RegisterPageState extends State<RegisterPage> {
 
   // ฟังก์ชันสำหรับการสมัครสมาชิกโดยใช้ Firebase
   void _register() async {
-    try {
-      // ตรวจสอบว่าไม่มีข้อผิดพลาดในข้อมูลที่กรอก
-      if (nameError.isEmpty &&
-          surnameError.isEmpty &&
-          phoneError.isEmpty &&
-          emailError.isEmpty &&
-          passwordError.isEmpty &&
-          confirmPasswordError.isEmpty) {
-        // สมัครสมาชิกผู้ใช้กับ Firebase
-        await _auth.createUserWithEmailAndPassword(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-        );
+  try {
+    // ตรวจสอบว่าไม่มีข้อผิดพลาดในข้อมูลที่กรอก
+    if (nameError.isEmpty &&
+        surnameError.isEmpty &&
+        phoneError.isEmpty &&
+        emailError.isEmpty &&
+        passwordError.isEmpty &&
+        confirmPasswordError.isEmpty) {
+      // สมัครสมาชิกผู้ใช้กับ Firebase
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
 
-        // แสดงข้อความเมื่อสมัครสมาชิกสำเร็จ
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('สมัครสมาชิกสำเร็จ')),
-        );
+      // บันทึกข้อมูลผู้ใช้ลง Firestore
+      await _firestore.collection('users').doc(userCredential.user?.uid).set({
+        'name': nameController.text.trim(),
+        'surname': surnameController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'email': emailController.text.trim(),
+      });
 
-        // นำทางไปยังหน้าล็อกอินหลังจากสมัครสมาชิกสำเร็จ
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const LoginPage(),
-            ),
-          );
-        });
-      } else {
-        // แสดงข้อความหากข้อมูลไม่ถูกต้อง
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('กรุณากรอกข้อมูลให้ถูกต้อง')),
-        );
-      }
-    } catch (e) {
-      // แสดงข้อความเมื่อเกิดข้อผิดพลาด
+      // แสดงข้อความเมื่อสมัครสมาชิกสำเร็จ
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        const SnackBar(content: Text('สมัครสมาชิกสำเร็จ')),
+      );
+
+      // แสดง Popup เมื่อสมัครสมาชิกเสร็จแล้ว
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('สมัครสมาชิกสำเร็จ'),
+            content: const Text('คุณได้สมัครสมาชิกเรียบร้อยแล้ว'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  // ปิด Popup และนำทางไปยังหน้าล็อกอิน
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                },
+                child: const Text('ตกลง'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // แสดงข้อความหากข้อมูลไม่ถูกต้อง
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ถูกต้อง')),
       );
     }
+  } catch (e) {
+    // แสดงข้อความเมื่อเกิดข้อผิดพลาด
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: ${e.toString()}')),
+    );
   }
+}
+
 
 
   @override

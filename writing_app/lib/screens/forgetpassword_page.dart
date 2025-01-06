@@ -18,6 +18,13 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   }
 
   @override
+  void dispose() {
+    // ปล่อยทรัพยากรเมื่อไม่ใช้แล้ว
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFDF6E4), // สีพื้นหลัง
@@ -87,6 +94,9 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                           content: Text('Password reset link has been sent!'),
                         ),
                       );
+
+                      // รีไดเรกต์ไปที่หน้าล็อกอินหรือหน้าหลัก
+                      Navigator.pop(context);
                     }
                   },
                   style: ElevatedButton.styleFrom(

@@ -56,31 +56,54 @@ class _LoginPageState extends State<LoginPage> {
 
    // ฟังก์ชันจัดการการล็อกอิน
   void _login() async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    // ใช้งาน Firebase Authentication สำหรับการล็อกอิน
+    UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+
+    // การล็อกอินสำเร็จ
     setState(() {
-      _isLoading = true;
+      _isLoading = false;
     });
 
-    try {
-      // ใช้งาน Firebase Authentication สำหรับการล็อกอิน
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-
-      // การล็อกอินสำเร็จ
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'เกิดข้อผิดพลาด')),
-      );
-    }
+    // แสดง Popup เมื่อเข้าสู่ระบบสำเร็จ
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('เข้าสู่ระบบสำเร็จ'),
+          content: const Text('ยินดีต้อนรับสู่ระบบของเรา!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // ปิด Popup
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                );
+              },
+              child: const Text('ตกลง'),
+            ),
+          ],
+        );
+      },
+    );
+  } on FirebaseAuthException catch (e) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.message ?? 'เกิดข้อผิดพลาด')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

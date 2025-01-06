@@ -14,59 +14,55 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFDF6E4),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // ปุ่มย้อนกลับ
-          },
-        ),
-      ),
+      appBar: _buildAppBar(),
       backgroundColor: const Color(0xFFFDF6E4),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                'หมวดหมู่ภาษา',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+      body: _buildBody(),
+    );
+  }
+
+  // ฟังก์ชันสร้าง AppBar
+  AppBar _buildAppBar() {
+    return AppBar(
+      backgroundColor: const Color(0xFFFDF6E4),
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context); // ปุ่มย้อนกลับ
+        },
+      ),
+    );
+  }
+
+  // ฟังก์ชันสร้าง Body
+  Widget _buildBody() {
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'หมวดหมู่ภาษา',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 32),
-              _buildLanguageButton('ภาษาไทย', Icons.language, 'ก'),
-              const SizedBox(height: 16),
-              _buildLanguageButton('English', Icons.translate, 'A'),
-            ],
-          ),
+            ),
+            const SizedBox(height: 32),
+            _buildLanguageButton('ภาษาไทย', Icons.language, 'ก'),
+            const SizedBox(height: 16),
+            _buildLanguageButton('English', Icons.translate, 'A'),
+          ],
         ),
       ),
     );
   }
 
-// ฟังก์ชันสร้างปุ่มภาษา
-  Widget _buildLanguageButton(
-      String language, IconData icon, String character) {
+  // ฟังก์ชันสร้างปุ่มภาษา
+  Widget _buildLanguageButton(String language, IconData icon, String character) {
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedLanguage = language; // อัปเดตภาษาที่เลือก
-        });
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => WritingPracticePage(
-              language: language,
-              character: character,
-            ),
-          ),
-        );
-      },
+      onTap: () => _onLanguageSelected(language, character),
       child: Column(
         children: [
           CircleAvatar(
@@ -84,6 +80,23 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
             style: const TextStyle(fontSize: 16),
           ),
         ],
+      ),
+    );
+  }
+
+  // ฟังก์ชันจัดการการเลือกภาษา
+  void _onLanguageSelected(String language, String character) {
+    setState(() {
+      _selectedLanguage = language; // อัปเดตภาษาที่เลือก
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WritingPracticePage(
+          language: language,
+          character: character,
+        ),
       ),
     );
   }
