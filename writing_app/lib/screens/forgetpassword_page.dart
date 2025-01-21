@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ForgetPasswordPage extends StatefulWidget {
   const ForgetPasswordPage({Key? key}) : super(key: key);
@@ -10,6 +11,7 @@ class ForgetPasswordPage extends StatefulWidget {
 class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   final TextEditingController _emailController = TextEditingController();
   String? _emailError; // ใช้เก็บข้อความแสดงข้อผิดพลาดของอีเมล
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // ฟังก์ชันตรวจสอบรูปแบบอีเมล
   bool _isValidEmail(String email) {
@@ -22,6 +24,21 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
     // ปล่อยทรัพยากรเมื่อไม่ใช้แล้ว
     _emailController.dispose();
     super.dispose();
+  }
+
+  // ฟังก์ชันสำหรับการส่งลิงก์รีเซ็ตรหัสผ่าน
+  Future<void> _sendPasswordResetLink() async {
+    try {
+      await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ลิงก์สำหรับรีเซ็ตรหัสผ่านได้ถูกส่งแล้ว!')),
+      );
+      Navigator.pop(context); // กลับไปยังหน้าล็อกอิน
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
   }
 
   @override
@@ -88,27 +105,20 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                         _emailError = 'รูปแบบอีเมล์ไม่ถูกต้อง';
                       });
                     } else {
-                      // เพิ่มฟังก์ชันการรีเซ็ตรหัสผ่าน
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Password reset link has been sent!'),
-                        ),
-                      );
-
-                      // รีไดเรกต์ไปที่หน้าล็อกอินหรือหน้าหลัก
-                      Navigator.pop(context);
+                      // เรียกใช้ฟังก์ชันการรีเซ็ตรหัสผ่าน
+                      _sendPasswordResetLink();
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD6CFC7),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   ),
                   child: const Text(
                     'Send Reset Link',
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
+
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
