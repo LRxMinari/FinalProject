@@ -104,6 +104,20 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+   // ฟังก์ชันสำหรับบันทึกข้อมูลผู้ใช้ลงใน Firestore
+  Future<void> saveUserData(UserCredential userCredential) async {
+    try {
+      await _firestore.collection('users').doc(userCredential.user?.uid).set({
+        'name': nameController.text.trim(),
+        'surname': surnameController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'email': emailController.text.trim(),
+      });
+    } catch (e) {
+      print('Error saving user data: $e');
+    }
+  }
+
   // ฟังก์ชันสำหรับการสมัครสมาชิกโดยใช้ Firebase
   void _register() async {
   try {
@@ -121,12 +135,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       // บันทึกข้อมูลผู้ใช้ลง Firestore
-      await _firestore.collection('users').doc(userCredential.user?.uid).set({
-        'name': nameController.text.trim(),
-        'surname': surnameController.text.trim(),
-        'phone': phoneController.text.trim(),
-        'email': emailController.text.trim(),
-      });
+      await saveUserData(userCredential);
 
       // แสดงข้อความเมื่อสมัครสมาชิกสำเร็จ
       ScaffoldMessenger.of(context).showSnackBar(

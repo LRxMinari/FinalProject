@@ -4,14 +4,13 @@ import 'screens/login_page.dart';
 
 // เพิ่ม FirebaseOptions สำหรับ Web
 const FirebaseOptions firebaseOptions = FirebaseOptions(
-  apiKey: 'YOUR_API_KEY', // คัดลอกจาก Firebase Console
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
-  measurementId: 'YOUR_MEASUREMENT_ID',
-  databaseURL: 'YOUR_DATABASE_URL', // ใช้หากใช้ Realtime Database
+  apiKey: "AIzaSyBUaN_bf7E9uWUS1Uo70d6U44S1ShetHzk", // คัดลอกจาก Firebase Console
+  authDomain: "practice-writing-app-c6bd8.firebaseapp.com",
+  projectId: "practice-writing-app-c6bd8",
+  storageBucket: "practice-writing-app-c6bd8.firebasestorage.app",
+  messagingSenderId: "271773865581",
+  appId: "1:271773865581:web:9d0b9c173bb15ab186d164",
+  measurementId: "G-YB2RKLXGZD"
 );
 
 void main() async {
@@ -33,7 +32,7 @@ class PracticeWritingApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      home: LoginPage(), // หน้าแรกของแอป
     );
   }
 }
