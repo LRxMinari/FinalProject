@@ -1,3 +1,16 @@
+// buildscript {} ต้องอยู่ก่อน plugins {}
+buildscript {
+    repositories {
+        google()  // ใช้ repository จาก Google
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath 'com.google.gms:google-services:4.3.15'  // เพิ่มการพึ่งพา Google Services ที่นี่
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10" // เข้ากันได้กับ Gradle 7.4
+    }
+}
+
 plugins {
     id "com.android.application"
     id "kotlin-android"
@@ -65,16 +78,5 @@ flutter {
     source '../..'
 }
 
-buildscript {
-    repositories {
-        google()  // ใช้ repository จาก Google
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.google.gms:google-services:4.3.15'  // เพิ่มการพึ่งพา Google Services ที่นี่
-    }
-}
-
-
 // เพื่อใช้งาน Google Services Plugin
-apply plugin: 'com.google.gms.google-services' 
+apply plugin: 'com.google.gms.google-services'
