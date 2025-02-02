@@ -5,9 +5,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath 'com.android.tools.build:gradle:8.2.2'
         classpath 'com.google.gms:google-services:4.3.15'  // เพิ่มการพึ่งพา Google Services ที่นี่
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10" // เข้ากันได้กับ Gradle 7.4
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22" // เข้ากันได้กับ Gradle 7.4
     }
 }
 
@@ -80,3 +80,4 @@ flutter {
 
 // เพื่อใช้งาน Google Services Plugin
 apply plugin: 'com.google.gms.google-services'
+

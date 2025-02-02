@@ -8,12 +8,12 @@ class EvaluationPage extends StatelessWidget {
   final String feedback;
 
   const EvaluationPage({
-    Key? key,
+    super.key,
     this.character = '', // กำหนดค่าเริ่มต้น
     this.score = 0.0, // กำหนดค่าเริ่มต้น
     this.stars = 0, // กำหนดค่าเริ่มต้น
     this.feedback = '', // กำหนดค่าเริ่มต้น
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

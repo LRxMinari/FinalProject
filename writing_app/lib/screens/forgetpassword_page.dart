@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ForgetPasswordPage extends StatefulWidget {
-  const ForgetPasswordPage({Key? key}) : super(key: key);
+  const ForgetPasswordPage({super.key});
 
   @override
   _ForgetPasswordPageState createState() => _ForgetPasswordPageState();
@@ -31,7 +31,8 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
     try {
       await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ลิงก์สำหรับรีเซ็ตรหัสผ่านได้ถูกส่งแล้ว!')),
+        const SnackBar(
+            content: Text('ลิงก์สำหรับรีเซ็ตรหัสผ่านได้ถูกส่งแล้ว!')),
       );
       Navigator.pop(context); // กลับไปยังหน้าล็อกอิน
     } catch (e) {
@@ -111,14 +112,14 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD6CFC7),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 12),
                   ),
                   child: const Text(
                     'Send Reset Link',
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
-
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => Navigator.pop(context),

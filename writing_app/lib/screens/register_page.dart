@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -29,7 +29,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String passwordError = '';
   String confirmPasswordError = '';
 
-   bool _isPasswordVisible = false;
+   final bool _isPasswordVisible = false;
 
   // ฟังก์ชันสำหรับตรวจสอบข้อมูลในแต่ละช่อง
   void _validateField() {

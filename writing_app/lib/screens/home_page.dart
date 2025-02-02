@@ -4,7 +4,7 @@ import 'evaluation_page.dart'; // นำเข้าหน้าจอการ�
 import 'settings_page.dart'; // นำเข้าหน้าตั้งค่า
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {

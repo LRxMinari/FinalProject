@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_page.dart'; // นำเข้า LoginPage
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({Key? key}) : super(key: key);
+  const SettingsPage({super.key});
 
   @override
   _SettingsPageState createState() => _SettingsPageState();

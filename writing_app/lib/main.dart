@@ -4,14 +4,14 @@ import 'screens/login_page.dart';
 
 // เพิ่ม FirebaseOptions สำหรับ Web
 const FirebaseOptions firebaseOptions = FirebaseOptions(
-  apiKey: "AIzaSyBUaN_bf7E9uWUS1Uo70d6U44S1ShetHzk", // คัดลอกจาก Firebase Console
-  authDomain: "practice-writing-app-c6bd8.firebaseapp.com",
-  projectId: "practice-writing-app-c6bd8",
-  storageBucket: "practice-writing-app-c6bd8.firebasestorage.app",
-  messagingSenderId: "271773865581",
-  appId: "1:271773865581:web:9d0b9c173bb15ab186d164",
-  measurementId: "G-YB2RKLXGZD"
-);
+    apiKey:
+        "AIzaSyBUaN_bf7E9uWUS1Uo70d6U44S1ShetHzk", // คัดลอกจาก Firebase Console
+    authDomain: "practice-writing-app-c6bd8.firebaseapp.com",
+    projectId: "practice-writing-app-c6bd8",
+    storageBucket: "practice-writing-app-c6bd8.firebasestorage.app",
+    messagingSenderId: "271773865581",
+    appId: "1:271773865581:web:9d0b9c173bb15ab186d164",
+    measurementId: "G-YB2RKLXGZD");
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +26,7 @@ void main() async {
 }
 
 class PracticeWritingApp extends StatelessWidget {
-  const PracticeWritingApp({Key? key}) : super(key: key);
+  const PracticeWritingApp({super.key});
 
   @override
   Widget build(BuildContext context) {

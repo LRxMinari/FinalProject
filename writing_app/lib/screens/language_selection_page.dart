@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'writing_practice_page.dart'; // นำเข้าหน้าฝึกเขียน
 
 class LanguageSelectionPage extends StatefulWidget {
-  const LanguageSelectionPage({Key? key}) : super(key: key);
+  const LanguageSelectionPage({super.key});
 
   @override
   _LanguageSelectionPageState createState() => _LanguageSelectionPageState();

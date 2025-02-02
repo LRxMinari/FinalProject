@@ -6,8 +6,7 @@ class WritingPracticePage extends StatefulWidget {
   final String character;
 
   const WritingPracticePage(
-      {Key? key, required this.language, required this.character})
-      : super(key: key);
+      {super.key, required this.language, required this.character});
 
   @override
   _WritingPracticePageState createState() => _WritingPracticePageState();
