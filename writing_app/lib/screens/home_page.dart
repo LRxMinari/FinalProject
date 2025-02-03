@@ -31,18 +31,18 @@ class HomePage extends StatelessWidget {
       backgroundColor: const Color(0xFFFDF6E4),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding:
+              const EdgeInsets.only(top: 0, bottom: 200), // ลดระยะห่างด้านบน
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'Practice Writing',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
+              Image.asset(
+                'assets/practice.gif',
+                width: 400, // ปรับขนาดตามต้องการ
+                height: 300, // ปรับความสูง
+                fit: BoxFit.contain, // ปรับให้ภาพอยู่ในขอบเขต
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

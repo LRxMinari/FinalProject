@@ -54,56 +54,56 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-   // ฟังก์ชันจัดการการล็อกอิน
+  // ฟังก์ชันจัดการการล็อกอิน
   void _login() async {
-  setState(() {
-    _isLoading = true;
-  });
-
-  try {
-    // ใช้งาน Firebase Authentication สำหรับการล็อกอิน
-    UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
-
-    // การล็อกอินสำเร็จ
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
     });
 
-    // แสดง Popup เมื่อเข้าสู่ระบบสำเร็จ
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('เข้าสู่ระบบสำเร็จ'),
-          content: const Text('ยินดีต้อนรับสู่ระบบของเรา!'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // ปิด Popup
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomePage()),
-                );
-              },
-              child: const Text('ตกลง'),
-            ),
-          ],
-        );
-      },
-    );
-  } on FirebaseAuthException catch (e) {
-    setState(() {
-      _isLoading = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(e.message ?? 'เกิดข้อผิดพลาด')),
-    );
+    try {
+      // ใช้งาน Firebase Authentication สำหรับการล็อกอิน
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // การล็อกอินสำเร็จ
+      setState(() {
+        _isLoading = false;
+      });
+
+      // แสดง Popup เมื่อเข้าสู่ระบบสำเร็จ
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('เข้าสู่ระบบสำเร็จ'),
+            content: const Text('ยินดีต้อนรับสู่ระบบของเรา!'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // ปิด Popup
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                },
+                child: const Text('ตกลง'),
+              ),
+            ],
+          );
+        },
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'เกิดข้อผิดพลาด')),
+      );
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -115,12 +115,11 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'Practice Writing',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
+              Image.asset(
+                'assets/practice.gif',
+                width: 400, // ปรับขนาดตามต้องการ
+                height: 300, // ปรับความสูง
+                fit: BoxFit.contain, // ปรับให้ภาพอยู่ในขอบเขต
               ),
               const SizedBox(height: 24),
               // ช่องกรอกอีเมล

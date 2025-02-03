@@ -10,9 +10,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   double _volume = 0.5; // ใช้สำหรับระดับเสียง
-  double _brightness = 0.5; // ใช้สำหรับแสงหน้าจอ
   bool _isMusicOn = true; // ใช้สำหรับสลับเพลง
-  bool _isDarkMode = false; // ใช้สำหรับโหมดมืด
   String _selectedLanguage = 'ภาษาไทย'; // เลือกภาษา
 
   @override
@@ -80,41 +78,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                     ),
                   ],
-                ),
-              ],
-            ),
-            const Divider(),
-            // โหมดดึงถอดสายตา
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('โหมดถอดสายตา'),
-                Switch(
-                  value: _isDarkMode,
-                  onChanged: (bool value) {
-                    setState(() {
-                      _isDarkMode = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-            const Divider(),
-            // แสงหน้าจอ
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('แสงหน้าจอ'),
-                Slider(
-                  value: _brightness,
-                  min: 0,
-                  max: 1,
-                  divisions: 10,
-                  onChanged: (double value) {
-                    setState(() {
-                      _brightness = value;
-                    });
-                  },
                 ),
               ],
             ),
