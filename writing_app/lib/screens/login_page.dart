@@ -108,113 +108,86 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDF6E4),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/practice.gif',
-                width: 400, // ปรับขนาดตามต้องการ
-                height: 300, // ปรับความสูง
-                fit: BoxFit.contain, // ปรับให้ภาพอยู่ในขอบเขต
-              ),
-              const SizedBox(height: 24),
-              // ช่องกรอกอีเมล
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'E-mail',
-                  hintText: 'กรุณากรอกอีเมล',
-                  filled: true,
-                  fillColor: const Color(0xFFECE4D6),
-                  border: const OutlineInputBorder(),
-                  errorText: _emailError, // แสดงข้อผิดพลาดอีเมล
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/Writing_1.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/practice.gif',
+                  width: 400,
+                  height: 300,
+                  fit: BoxFit.contain,
                 ),
-                onChanged: (value) {
-                  // ตรวจสอบอีเมลเมื่อกรอกข้อมูล
-                  _validateEmail(value);
-                },
-              ),
-              const SizedBox(height: 16),
-              // ช่องกรอกรหัสผ่าน
-              TextField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  hintText: 'กรุณากรอกรหัสผ่าน',
-                  filled: true,
-                  fillColor: const Color(0xFFECE4D6),
-                  border: const OutlineInputBorder(),
-                  errorText: _passwordError, // แสดงข้อผิดพลาดรหัสผ่าน
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
+                const SizedBox(height: 24),
+                Container(
+                  width: 300,
+                  child: TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'E-mail',
+                      hintText: 'กรุณากรอกอีเมล',
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.8),
+                      border: const OutlineInputBorder(),
+                      errorText: _emailError,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
+                    onChanged: (value) {
+                      _validateEmail(value);
                     },
                   ),
                 ),
-                onChanged: (value) {
-                  // ตรวจสอบรหัสผ่านเมื่อกรอกข้อมูล
-                  _validatePassword(value);
-                },
-              ),
-              const SizedBox(height: 16),
-              // ปุ่มล็อกอิน
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD6CFC7),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Login'),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterPage(),
+                const SizedBox(height: 16),
+                Container(
+                  width: 300,
+                  child: TextField(
+                    controller: _passwordController,
+                    obscureText: !_isPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'กรุณากรอกรหัสผ่าน',
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.8),
+                      border: const OutlineInputBorder(),
+                      errorText: _passwordError,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
-                      );
-                    },
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(color: Colors.black),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
                     ),
-                  ),
-                  const Text('|', style: TextStyle(color: Colors.black)),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ForgetPasswordPage(),
-                        ),
-                      );
+                    onChanged: (value) {
+                      _validatePassword(value);
                     },
-                    child: const Text(
-                      'Forget Password',
-                      style: TextStyle(color: Colors.black),
-                    ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueGrey,
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Login'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

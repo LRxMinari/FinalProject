@@ -29,6 +29,7 @@ flutter:
 
   assets:
     - assets/practice.gif
+    - assets/Writing_1.png
 
   # To add assets to your application, uncomment and add paths here.
   # assets:
