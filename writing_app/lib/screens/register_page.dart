@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // นำเข้า LoginPage
+import 'package:google_fonts/google_fonts.dart'; // ใช้ Google Fonts
+import 'login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -20,91 +20,49 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
-  String nameError = '';
-  String surnameError = '';
-  String phoneError = '';
-  String emailError = '';
-  String passwordError = '';
-  String confirmPasswordError = '';
+  String? nameError;
+  String? surnameError;
+  String? phoneError;
+  String? emailError;
+  String? passwordError;
+  String? confirmPasswordError;
 
-   final bool _isPasswordVisible = false;
-
-  // ฟังก์ชันสำหรับตรวจสอบข้อมูลในแต่ละช่อง
   void _validateField() {
-    setState(() {
-      nameError = nameController.text.isNotEmpty && nameController.text.isEmpty
-          ? 'กรุณากรอกชื่อ'
-          : '';
-      surnameError =
-          surnameController.text.isNotEmpty && surnameController.text.isEmpty
-              ? 'กรุณากรอกนามสกุล'
-              : '';
-      phoneError = phoneController.text.isNotEmpty
-          ? !RegExp(r'^[0-9]+$').hasMatch(phoneController.text)
+    Map<String, String?> errors = {
+      'name': nameController.text.isEmpty ? 'กรุณากรอกชื่อ' : null,
+      'surname': surnameController.text.isEmpty ? 'กรุณากรอกนามสกุล' : null,
+      'phone': phoneController.text.isEmpty
+          ? 'กรุณากรอกเบอร์โทร'
+          : !RegExp(r'^[0-9]+$').hasMatch(phoneController.text)
               ? 'เบอร์โทรต้องเป็นตัวเลข'
-              : ''
-          : '';
-      emailError = emailController.text.isNotEmpty
-          ? !RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
+              : null,
+      'email': emailController.text.isEmpty
+          ? 'กรุณากรอกอีเมล'
+          : !RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
                   .hasMatch(emailController.text)
-              ? 'รูปแบบอีเมล์ไม่ถูกต้อง'
-              : ''
-          : '';
-      passwordError = passwordController.text.isNotEmpty
-          ? passwordController.text.isEmpty
-              ? 'กรุณากรอกรหัสผ่าน'
-              : ''
-          : '';
-      confirmPasswordError = confirmPasswordController.text.isEmpty
+              ? 'รูปแบบอีเมลไม่ถูกต้อง'
+              : null,
+      'password': passwordController.text.isEmpty ? 'กรุณากรอกรหัสผ่าน' : null,
+      'confirmPassword': confirmPasswordController.text.isEmpty
           ? 'กรุณากรอกยืนยันรหัสผ่าน'
           : confirmPasswordController.text != passwordController.text
               ? 'รหัสผ่านไม่ตรงกัน'
-              : '';
+              : null,
+    };
+
+    setState(() {
+      nameError = errors['name'];
+      surnameError = errors['surname'];
+      phoneError = errors['phone'];
+      emailError = errors['email'];
+      passwordError = errors['password'];
+      confirmPasswordError = errors['confirmPassword'];
     });
   }
 
-  // ฟังก์ชันสำหรับช่องกรอกข้อมูล
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    bool obscureText = false,
-    required TextEditingController controller,
-    String? errorText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: controller,
-          obscureText: obscureText,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hint,
-            labelStyle: const TextStyle(fontSize: 16),
-            hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFECE4D6), // สีพื้นหลังของช่องกรอกข้อมูล
-          ),
-          onChanged: (_) => _validateField(), // ตรวจสอบข้อมูลเมื่อกรอก
-        ),
-        if (errorText != null && errorText.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              errorText,
-              style: const TextStyle(color: Colors.red, fontSize: 12),
-            ),
-          ),
-      ],
-    );
-  }
-
-   // ฟังก์ชันสำหรับบันทึกข้อมูลผู้ใช้ลงใน Firestore
   Future<void> saveUserData(UserCredential userCredential) async {
     try {
       await _firestore.collection('users').doc(userCredential.user?.uid).set({
@@ -118,148 +76,183 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  // ฟังก์ชันสำหรับการสมัครสมาชิกโดยใช้ Firebase
   void _register() async {
-  try {
-    // ตรวจสอบว่าไม่มีข้อผิดพลาดในข้อมูลที่กรอก
-    if (nameError.isEmpty &&
-        surnameError.isEmpty &&
-        phoneError.isEmpty &&
-        emailError.isEmpty &&
-        passwordError.isEmpty &&
-        confirmPasswordError.isEmpty) {
-      // สมัครสมาชิกผู้ใช้กับ Firebase
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+    try {
+      _validateField();
+      if (nameError == null &&
+          surnameError == null &&
+          phoneError == null &&
+          emailError == null &&
+          passwordError == null &&
+          confirmPasswordError == null) {
+        UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+        await saveUserData(userCredential);
 
-      // บันทึกข้อมูลผู้ใช้ลง Firestore
-      await saveUserData(userCredential);
-
-      // แสดงข้อความเมื่อสมัครสมาชิกสำเร็จ
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('สมัครสมาชิกสำเร็จ', style: GoogleFonts.poppins()),
+              content: Text('คุณได้สมัครสมาชิกเรียบร้อยแล้ว',
+                  style: GoogleFonts.poppins()),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginPage()),
+                    );
+                  },
+                  child: Text('ตกลง',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('กรุณากรอกข้อมูลให้ถูกต้อง')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('สมัครสมาชิกสำเร็จ')),
-      );
-
-      // แสดง Popup เมื่อสมัครสมาชิกเสร็จแล้ว
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('สมัครสมาชิกสำเร็จ'),
-            content: const Text('คุณได้สมัครสมาชิกเรียบร้อยแล้ว'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  // ปิด Popup และนำทางไปยังหน้าล็อกอิน
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  );
-                },
-                child: const Text('ตกลง'),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      // แสดงข้อความหากข้อมูลไม่ถูกต้อง
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ถูกต้อง')),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
-  } catch (e) {
-    // แสดงข้อความเมื่อเกิดข้อผิดพลาด
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: ${e.toString()}')),
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    bool obscureText = false,
+    required TextEditingController controller,
+    String? errorText,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          labelText: label,
+          hintText: hint,
+          labelStyle: GoogleFonts.itim(fontSize: 18),
+          errorText: errorText,
+        ),
+        onChanged: (_) => _validateField(),
+      ),
     );
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context), // ปุ่มย้อนกลับ
-        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      backgroundColor: const Color(0xFFFDF6E4), // สีพื้นหลังของหน้า
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Center(
-                child: Text(
-                  'สมัครสมาชิก',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                label: 'ชื่อ :',
-                hint: 'กรุณากรอกชื่อ',
-                controller: nameController,
-                errorText: nameError,
-              ),
-              const SizedBox(height: 8),
-              _buildTextField(
-                label: 'นามสกุล :',
-                hint: 'กรุณากรอกนามสกุล',
-                controller: surnameController,
-                errorText: surnameError,
-              ),
-              const SizedBox(height: 8),
-              _buildTextField(
-                label: 'เบอร์โทร :',
-                hint: 'กรุณากรอกเบอร์โทร',
-                controller: phoneController,
-                errorText: phoneError,
-              ),
-              const SizedBox(height: 8),
-              _buildTextField(
-                label: 'E-mail :',
-                hint: 'กรุณากรอกอีเมล',
-                controller: emailController,
-                errorText: emailError,
-              ),
-              const SizedBox(height: 8),
-              _buildTextField(
-                label: 'Password :',
-                hint: 'กรุณากรอกรหัสผ่าน',
-                obscureText: true,
-                controller: passwordController,
-                errorText: passwordError,
-              ),
-              const SizedBox(height: 8),
-              _buildTextField(
-                label: 'ยืนยันรหัสผ่าน :',
-                hint: 'กรุณากรอกยืนยันรหัสผ่าน',
-                obscureText: true,
-                controller: confirmPasswordController,
-                errorText: confirmPasswordError,
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _register, // เรียกใช้ฟังก์ชันสมัครสมาชิก
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD6CFC7), // สีของปุ่ม
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/Writing_1.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'สมัครสมาชิก',
+                    style: GoogleFonts.mali(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 255, 0, 0),
+                    ),
                   ),
-                  child: const Text('สมัครสมาชิก'),
-                ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                      label: 'ชื่อ',
+                      hint: 'กรุณากรอกชื่อ',
+                      controller: nameController,
+                      errorText: nameError),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                      label: 'นามสกุล',
+                      hint: 'กรุณากรอกนามสกุล',
+                      controller: surnameController,
+                      errorText: surnameError),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                      label: 'เบอร์โทร',
+                      hint: 'กรุณากรอกเบอร์โทร',
+                      controller: phoneController,
+                      errorText: phoneError),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                      label: 'E-mail',
+                      hint: 'กรุณากรอกอีเมล',
+                      controller: emailController,
+                      errorText: emailError),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                      label: 'Password',
+                      hint: 'กรุณากรอกรหัสผ่าน',
+                      obscureText: true,
+                      controller: passwordController,
+                      errorText: passwordError),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                      label: 'ยืนยันรหัสผ่าน',
+                      hint: 'กรุณากรอกยืนยันรหัสผ่าน',
+                      obscureText: true,
+                      controller: confirmPasswordController,
+                      errorText: confirmPasswordError),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 300,
+                    child: ElevatedButton(
+                      onPressed: _register,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text('สมัครสมาชิก',
+                          style: GoogleFonts.itim(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

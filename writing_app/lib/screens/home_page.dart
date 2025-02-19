@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart'; // ใช้ Google Fonts
 import 'language_selection_page.dart';
 import 'evaluation_page.dart';
 import 'settings_page.dart';
@@ -9,14 +10,13 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // ให้พื้นหลังอยู่ด้านหลัง AppBar
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // ทำให้ AppBar โปร่งใส
-        elevation: 0, // ลบเงาออก
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings,
-                color: Colors.black), // ไอคอนสีดำให้มองเห็นชัดขึ้น
+            icon: const Icon(Icons.settings, color: Colors.black),
             onPressed: () {
               Navigator.push(
                 context,
@@ -30,9 +30,9 @@ class HomePage extends StatelessWidget {
       ),
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/Writing_1.png'), // ใส่พื้นหลังที่ต้องการ
-            fit: BoxFit.cover, // ปรับให้เต็มหน้าจอ
+          image: const DecorationImage(
+            image: AssetImage('assets/Writing_1.png'), // พื้นหลัง
+            fit: BoxFit.cover,
           ),
         ),
         child: Center(
@@ -41,11 +41,29 @@ class HomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/practice.gif',
-                  width: 400,
-                  height: 300,
-                  fit: BoxFit.contain,
+                // แทนที่ GIF ด้วยตัวหนังสือ
+                Column(
+                  children: [
+                    Text(
+                      'WRITING PRACTICE',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.fredoka(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 255, 0, 0),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'APPLICATION',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.fredoka(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 255, 0, 0),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -53,54 +71,70 @@ class HomePage extends StatelessWidget {
                   children: [
                     Column(
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: const Color(0xFFECE4D6),
-                          child: IconButton(
-                            icon: const Icon(Icons.pets),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const EvaluationPage(
-                                    character: 'ก',
-                                    score: 85.0,
-                                    stars: 4,
-                                    feedback:
-                                        'ดีมาก! ลองปรับการเขียนหัวตัวอักษรให้คมขึ้น.',
-                                  ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const EvaluationPage(
+                                  character: 'ก',
+                                  score: 85.0,
+                                  stars: 4,
+                                  feedback:
+                                      'ดีมาก! ลองปรับการเขียนหัวตัวอักษรให้คมขึ้น.',
                                 ),
-                              );
-                            },
+                              ),
+                            );
+                          },
+                          child: Image.asset(
+                            'assets/evaluate_icon.png', // ใช้ PNG เป็นปุ่มโดยตรง
+                            width: 80, // ปรับขนาดให้เหมาะสม
+                            height: 80,
                           ),
                         ),
-                        const Text('ประเมินผลลัพธ์'),
+                        const SizedBox(height: 8),
+                        Text(
+                          'ประเมินผลลัพธ์',
+                          style: GoogleFonts.itim(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(width: 16),
                     Column(
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: const Color(0xFFECE4D6),
-                          child: IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const LanguageSelectionPage(),
-                                ),
-                              );
-                            },
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const LanguageSelectionPage(),
+                              ),
+                            );
+                          },
+                          child: Image.asset(
+                            'assets/practice_icon.png',
+                            width: 80, // ปรับขนาดให้เหมาะสม
+                            height: 80,
                           ),
                         ),
-                        const Text('ฝึกเขียน'),
+                        const SizedBox(height: 8),
+                        Text(
+                          'ฝึกเขียน',
+                          style: GoogleFonts.itim(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black,
+                          ),
+                        ),
                       ],
                     ),
                   ],
-                ),
+                )
               ],
             ),
           ),

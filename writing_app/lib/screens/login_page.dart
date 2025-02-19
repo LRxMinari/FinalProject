@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart'; // ใช้ Google Fonts
 import 'home_page.dart'; // นำเข้าไฟล์ HomePage
 import 'register_page.dart'; // นำเข้าไฟล์ Register Page
 import 'forgetpassword_page.dart'; // นำเข้าไฟล์ Forget Password Page
@@ -16,91 +17,68 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   String? _emailError;
   String? _passwordError;
-  bool _isPasswordVisible = false; // สถานะแสดง/ซ่อนรหัสผ่าน
-  bool _isLoading = false; // สถานะการโหลด
+  bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
-  // ฟังก์ชันสำหรับตรวจสอบรูปแบบอีเมล
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
     return emailRegex.hasMatch(email);
   }
 
-  // ฟังก์ชันสำหรับตรวจสอบข้อมูลเมื่อกรอก
   void _validateEmail(String email) {
-    if (email.isEmpty) {
-      setState(() {
-        _emailError = 'กรุณากรอกอีเมล';
-      });
-    } else if (!_isValidEmail(email)) {
-      setState(() {
-        _emailError = 'รูปแบบอีเมลไม่ถูกต้อง';
-      });
-    } else {
-      setState(() {
-        _emailError = null;
-      });
-    }
+    setState(() {
+      _emailError = email.isEmpty
+          ? 'กรุณากรอกอีเมล'
+          : (!_isValidEmail(email) ? 'รูปแบบอีเมลไม่ถูกต้อง' : null);
+    });
   }
 
   void _validatePassword(String password) {
-    if (password.isEmpty) {
-      setState(() {
-        _passwordError = 'กรุณากรอกรหัสผ่าน';
-      });
-    } else {
-      setState(() {
-        _passwordError = null;
-      });
-    }
+    setState(() {
+      _passwordError = password.isEmpty ? 'กรุณากรอกรหัสผ่าน' : null;
+    });
   }
 
-  // ฟังก์ชันจัดการการล็อกอิน
   void _login() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // ใช้งาน Firebase Authentication สำหรับการล็อกอิน
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
 
-      // การล็อกอินสำเร็จ
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
 
-      // แสดง Popup เมื่อเข้าสู่ระบบสำเร็จ
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('เข้าสู่ระบบสำเร็จ'),
-            content: const Text('ยินดีต้อนรับสู่ระบบของเรา!'),
+            title: Text('เข้าสู่ระบบสำเร็จ', style: GoogleFonts.poppins()),
+            content: Text('ยินดีต้อนรับสู่ระบบของเรา!',
+                style: GoogleFonts.poppins()),
             actions: <Widget>[
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // ปิด Popup
+                  Navigator.of(context).pop();
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => const HomePage()),
                   );
                 },
-                child: const Text('ตกลง'),
+                child: Text('ตกลง',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
               ),
             ],
           );
         },
       );
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'เกิดข้อผิดพลาด')),
+        SnackBar(
+            content: Text(e.message ?? 'เกิดข้อผิดพลาด',
+                style: GoogleFonts.poppins())),
       );
     }
   }
@@ -108,6 +86,11 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -121,42 +104,79 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/practice.gif',
-                  width: 400,
-                  height: 300,
-                  fit: BoxFit.contain,
+                Column(
+                  children: [
+                    Text(
+                      'WRITING PRACTICE',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.fredoka(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 255, 0, 0),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'APPLICATION',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.fredoka(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 255, 0, 0),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 Container(
-                  width: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
+                      border: InputBorder.none,
                       labelText: 'E-mail',
-                      hintText: 'กรุณากรอกอีเมล',
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.8),
-                      border: const OutlineInputBorder(),
+                      hintText: 'example@email.com',
+                      labelStyle: GoogleFonts.itim(fontSize: 18),
                       errorText: _emailError,
                     ),
-                    onChanged: (value) {
-                      _validateEmail(value);
-                    },
+                    onChanged: _validateEmail,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  width: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: TextField(
                     controller: _passwordController,
                     obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
+                      border: InputBorder.none,
                       labelText: 'Password',
                       hintText: 'กรุณากรอกรหัสผ่าน',
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.8),
-                      border: const OutlineInputBorder(),
+                      labelStyle: GoogleFonts.itim(fontSize: 18),
                       errorText: _passwordError,
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -164,27 +184,78 @@ class _LoginPageState extends State<LoginPage> {
                               ? Icons.visibility
                               : Icons.visibility_off,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
+                        onPressed: () => setState(
+                            () => _isPasswordVisible = !_isPasswordVisible),
                       ),
                     ),
-                    onChanged: (value) {
-                      _validatePassword(value);
-                    },
+                    onChanged: _validatePassword,
                   ),
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueGrey,
+                const SizedBox(height: 8),
+                // **ปุ่มเข้าสู่ระบบ**
+                SizedBox(
+                  width: 500, // กำหนดให้กว้างเท่ากับกล่องข้อความ
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14), // กำหนดความสูงของปุ่ม
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(12), // ให้ตรงกับกล่องข้อความ
+                      ),
+                    ),
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            'เข้าสู่ระบบ',
+                            style: GoogleFonts.itim(
+                                fontSize: 22, color: Colors.white),
+                          ),
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Login'),
+                ),
+
+                const SizedBox(height: 16),
+                // **ปุ่มลืมรหัสผ่าน**
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ForgetPasswordPage()));
+                  },
+                  child: Text('ลืมรหัสผ่าน?',
+                      style: GoogleFonts.mali(
+                          color: const Color.fromARGB(255, 255, 0, 0),
+                          fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 1),
+                // **ปุ่มสมัครสมาชิก**
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("ยังไม่มีบัญชี?",
+                        style: GoogleFonts.mali(
+                          fontSize: 14,
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                        )),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => RegisterPage()));
+                      },
+                      child: Text(
+                        'สมัครสมาชิก',
+                        style: GoogleFonts.mali(
+                            fontSize: 18,
+                            color: Colors.blueGrey,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

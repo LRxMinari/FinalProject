@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ForgetPasswordPage extends StatefulWidget {
   const ForgetPasswordPage({super.key});
@@ -10,34 +11,39 @@ class ForgetPasswordPage extends StatefulWidget {
 
 class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   final TextEditingController _emailController = TextEditingController();
-  String? _emailError; // ใช้เก็บข้อความแสดงข้อผิดพลาดของอีเมล
+  String? _emailError;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // ฟังก์ชันตรวจสอบรูปแบบอีเมล
   bool _isValidEmail(String email) {
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\\.[^@]+');
     return emailRegex.hasMatch(email);
   }
 
   @override
   void dispose() {
-    // ปล่อยทรัพยากรเมื่อไม่ใช้แล้ว
     _emailController.dispose();
     super.dispose();
   }
 
-  // ฟังก์ชันสำหรับการส่งลิงก์รีเซ็ตรหัสผ่าน
   Future<void> _sendPasswordResetLink() async {
     try {
       await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('ลิงก์สำหรับรีเซ็ตรหัสผ่านได้ถูกส่งแล้ว!')),
+        SnackBar(
+          content: Text(
+            'ลิงก์สำหรับรีเซ็ตรหัสผ่านได้ถูกส่งแล้ว!',
+            style: GoogleFonts.itim(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        ),
       );
-      Navigator.pop(context); // กลับไปยังหน้าล็อกอิน
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -45,93 +51,127 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDF6E4), // สีพื้นหลัง
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: SingleChildScrollView(
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/Writing_1.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 40,
+              left: 24,
+              right: 24,
+            ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
-                  'Reset Your Password',
-                  style: TextStyle(
+                Icon(Icons.lock_outline, size: 80, color: Colors.black87),
+                const SizedBox(height: 20),
+                Text(
+                  'ลืมรหัสผ่าน',
+                  style: GoogleFonts.mali(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'กรุณากรอกที่อยู่อีเมลที่คุณลงทะเบียน',
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                const SizedBox(height: 10),
+                Text(
+                  'กรุณากรอกที่อยู่อีเมลที่คุณใช้สมัคร\nระบบจะส่งลิงก์ไปให้คุณ',
+                  style: GoogleFonts.itim(fontSize: 16, color: Colors.black54),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'E-mail',
-                    hintText: 'Enter your email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFECE4D6),
-                    errorText: _emailError, // แสดงข้อความข้อผิดพลาดถ้ามี
+                const SizedBox(height: 24),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 255, 255, 255),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      // ตรวจสอบรูปแบบอีเมล
-                      if (value.isEmpty) {
-                        _emailError = 'กรุณากรอกอีเมล์';
-                      } else if (!_isValidEmail(value)) {
-                        _emailError = 'รูปแบบอีเมล์ไม่ถูกต้อง';
-                      } else {
-                        _emailError = null;
-                      }
-                    });
-                  },
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      labelText: 'E-mail',
+                      hintText: 'example@email.com',
+                      labelStyle: GoogleFonts.itim(fontSize: 18),
+                      errorText: _emailError,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        if (value.isEmpty) {
+                          _emailError = 'กรุณากรอกอีเมล์';
+                        } else if (!_isValidEmail(value)) {
+                          _emailError = 'รูปแบบอีเมล์ไม่ถูกต้อง';
+                        } else {
+                          _emailError = null;
+                        }
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    // ตรวจสอบอีกครั้งก่อนกดปุ่ม
-                    if (_emailController.text.isEmpty) {
-                      setState(() {
-                        _emailError = 'กรุณากรอกอีเมล์';
-                      });
-                    } else if (!_isValidEmail(_emailController.text)) {
-                      setState(() {
-                        _emailError = 'รูปแบบอีเมล์ไม่ถูกต้อง';
-                      });
-                    } else {
-                      // เรียกใช้ฟังก์ชันการรีเซ็ตรหัสผ่าน
-                      _sendPasswordResetLink();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD6CFC7),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
-                  ),
-                  child: const Text(
-                    'Send Reset Link',
-                    style: TextStyle(fontSize: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_emailController.text.isEmpty) {
+                        setState(() {
+                          _emailError = 'กรุณากรอกอีเมล์';
+                        });
+                      } else if (!_isValidEmail(_emailController.text)) {
+                        setState(() {
+                          _emailError = 'รูปแบบอีเมล์ไม่ถูกต้อง';
+                        });
+                      } else {
+                        _sendPasswordResetLink();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: Text(
+                      'ส่งลิงก์รีเซ็ตรหัสผ่าน',
+                      style:
+                          GoogleFonts.itim(fontSize: 18, color: Colors.white),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Back to Login',
-                    style: TextStyle(color: Colors.black),
+                  child: Text(
+                    'กลับไปยังหน้าเข้าสู่ระบบ',
+                    style: GoogleFonts.itim(
+                      fontSize: 16,
+                      color: Colors.green.shade700,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
