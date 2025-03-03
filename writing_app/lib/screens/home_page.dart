@@ -45,22 +45,25 @@ class HomePage extends StatelessWidget {
                 Column(
                   children: [
                     Text(
-                      'WRITING PRACTICE',
+                      'WRITING\nPRACTICE',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.fredoka(
-                        fontSize: 36,
+                      style: GoogleFonts.luckiestGuy(
+                        fontSize: 100, // ปรับขนาดตัวอักษร
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 255, 0, 0),
+                        color: const Color.fromARGB(255, 109, 20, 0),
+                        height: 1, // ลดค่าลงเพื่อให้บรรทัดชิดกัน
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      'APPLICATION',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.fredoka(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 255, 0, 0),
+                    Transform.translate(
+                      offset:
+                          Offset(0, -10), // ขยับขึ้น 10 พิกเซลเพื่อลดระยะห่าง
+                      child: Text(
+                        'APPLICATION',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.luckiestGuy(
+                          fontSize: 40, // ปรับขนาดให้เล็กลง
+                          color: const Color.fromARGB(255, 109, 20, 0),
+                        ),
                       ),
                     ),
                   ],
@@ -88,8 +91,8 @@ class HomePage extends StatelessWidget {
                           },
                           child: Image.asset(
                             'assets/evaluate_icon.png', // ใช้ PNG เป็นปุ่มโดยตรง
-                            width: 80, // ปรับขนาดให้เหมาะสม
-                            height: 80,
+                            width: 150, // ปรับขนาดให้เหมาะสม
+                            height: 150,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -118,8 +121,8 @@ class HomePage extends StatelessWidget {
                           },
                           child: Image.asset(
                             'assets/practice_icon.png',
-                            width: 80, // ปรับขนาดให้เหมาะสม
-                            height: 80,
+                            width: 200, // ปรับขนาดให้เหมาะสม
+                            height: 150,
                           ),
                         ),
                         const SizedBox(height: 8),

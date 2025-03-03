@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'writing_practice_page.dart'; // นำเข้าหน้าฝึกเขียน
+import 'package:google_fonts/google_fonts.dart';
+import 'writing_practice_page.dart';
 
 class LanguageSelectionPage extends StatefulWidget {
   const LanguageSelectionPage({super.key});
@@ -14,80 +15,87 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
-      backgroundColor: const Color(0xFFFDF6E4),
       body: _buildBody(),
     );
   }
 
-  // ฟังก์ชันสร้าง AppBar
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFFFDF6E4),
+      backgroundColor: Colors.transparent,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
-          Navigator.pop(context); // ปุ่มย้อนกลับ
+          Navigator.pop(context);
         },
       ),
     );
   }
 
-  // ฟังก์ชันสร้าง Body
   Widget _buildBody() {
-    return Center(
-      child: SingleChildScrollView(
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/Writing_1.png'), // พื้นหลัง
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
+            Text(
               'หมวดหมู่ภาษา',
-              style: TextStyle(
-                fontSize: 24,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.itim(
+                fontSize: 70,
                 fontWeight: FontWeight.bold,
+                color: const Color.fromARGB(255, 109, 20, 0),
+                height: 1, // ลดระยะห่างระหว่างบรรทัด
               ),
             ),
             const SizedBox(height: 32),
-            _buildLanguageButton('ภาษาไทย', Icons.language, 'ก'),
-            const SizedBox(height: 16),
-            _buildLanguageButton('English', Icons.translate, 'A'),
+            _buildLanguageButton('ภาษาไทย', 'Thai', 'ก'),
+            const SizedBox(height: 24),
+            _buildLanguageButton('ภาษาอังกฤษ', 'English', 'A'),
           ],
         ),
       ),
     );
   }
 
-  // ฟังก์ชันสร้างปุ่มภาษา
-  Widget _buildLanguageButton(String language, IconData icon, String character) {
+  Widget _buildLanguageButton(
+      String languageTH, String languageEN, String character) {
     return GestureDetector(
-      onTap: () => _onLanguageSelected(language, character),
+      onTap: () => _onLanguageSelected(languageEN, character),
       child: Column(
         children: [
           CircleAvatar(
-            radius: 40,
-            backgroundColor: const Color(0xFFECE4D6),
-            child: Icon(
-              icon,
-              size: 30,
-              color: Colors.black,
+            radius: 50,
+            backgroundColor: const Color(0xFFCDE5D7), // สีเขียวอ่อน
+            child: Center(
+              child: Text(
+                languageTH,
+                style: GoogleFonts.itim(fontSize: 22, color: Colors.black),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            language,
-            style: const TextStyle(fontSize: 16),
+            languageEN,
+            style: GoogleFonts.itim(fontSize: 20, color: Colors.black),
           ),
         ],
       ),
     );
   }
 
-  // ฟังก์ชันจัดการการเลือกภาษา
   void _onLanguageSelected(String language, String character) {
     setState(() {
-      _selectedLanguage = language; // อัปเดตภาษาที่เลือก
+      _selectedLanguage = language;
     });
 
     Navigator.push(

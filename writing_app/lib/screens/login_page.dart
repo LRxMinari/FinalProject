@@ -110,9 +110,10 @@ class _LoginPageState extends State<LoginPage> {
                       'WRITING\nPRACTICE',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.luckiestGuy(
-                        fontSize: 40, // ปรับขนาดตัวอักษร
+                        fontSize: 100, // ปรับขนาดตัวอักษร
                         fontWeight: FontWeight.bold,
-                        color: Colors.brown.shade800,
+                        color: const Color.fromARGB(255, 109, 20, 0),
+                        height: 1, // ลดค่าลงเพื่อให้บรรทัดชิดกัน
                       ),
                     ),
                     Transform.translate(
@@ -122,81 +123,87 @@ class _LoginPageState extends State<LoginPage> {
                         'APPLICATION',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.luckiestGuy(
-                          fontSize: 20, // ปรับขนาดให้เล็กลง
-                          color: Colors.brown.shade800,
+                          fontSize: 40, // ปรับขนาดให้เล็กลง
+                          color: const Color.fromARGB(255, 109, 20, 0),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: TextField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      labelText: 'E-mail',
-                      hintText: 'example@email.com',
-                      labelStyle: GoogleFonts.itim(fontSize: 18),
-                      errorText: _emailError,
-                    ),
-                    onChanged: _validateEmail,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: TextField(
-                    controller: _passwordController,
-                    obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      labelText: 'Password',
-                      hintText: 'กรุณากรอกรหัสผ่าน',
-                      labelStyle: GoogleFonts.itim(fontSize: 18),
-                      errorText: _passwordError,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
+                SizedBox(
+                  width: 450, // ปรับขนาดให้เล็กลง
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
                         ),
-                        onPressed: () => setState(
-                            () => _isPasswordVisible = !_isPasswordVisible),
-                      ),
+                      ],
                     ),
-                    onChanged: _validatePassword,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5), // ลด padding
+                    child: TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        labelText: 'E-mail',
+                        hintText: 'example@email.com',
+                        labelStyle: GoogleFonts.itim(fontSize: 18),
+                        errorText: _emailError,
+                      ),
+                      onChanged: _validateEmail,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
+
+                const SizedBox(height: 10), // ลดระยะห่างระหว่างกล่อง
+                SizedBox(
+                  width: 450, // ปรับขนาดให้เล็กลง
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5), // ลด padding
+                    child: TextField(
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        labelText: 'Password',
+                        hintText: 'กรุณากรอกรหัสผ่าน',
+                        labelStyle: GoogleFonts.itim(fontSize: 18),
+                        errorText: _passwordError,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () => setState(
+                              () => _isPasswordVisible = !_isPasswordVisible),
+                        ),
+                      ),
+                      onChanged: _validatePassword,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 // **ปุ่มเข้าสู่ระบบ**
                 SizedBox(
-                  width: 500, // กำหนดให้กว้างเท่ากับกล่องข้อความ
+                  width: 450, // กำหนดให้กว้างเท่ากับกล่องข้อความ
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
@@ -229,6 +236,7 @@ class _LoginPageState extends State<LoginPage> {
                   },
                   child: Text('ลืมรหัสผ่าน?',
                       style: GoogleFonts.mali(
+                          fontSize: 14,
                           color: const Color.fromARGB(255, 255, 0, 0),
                           fontWeight: FontWeight.bold)),
                 ),
@@ -253,7 +261,7 @@ class _LoginPageState extends State<LoginPage> {
                         'สมัครสมาชิก',
                         style: GoogleFonts.mali(
                             fontSize: 18,
-                            color: Colors.blueGrey,
+                            color: const Color.fromARGB(255, 105, 205, 255),
                             fontWeight: FontWeight.bold),
                       ),
                     ),
