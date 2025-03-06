@@ -91,18 +91,18 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         _character = _charactersToPractice[_currentCharacterIndex];
         points.clear();
       } else {
-        // เมื่อฝึกเขียนตัวอักษรสุดท้าย
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EvaluationPage(
-              character: _character,
-              score: 80.0, // ตัวอย่างคะแนนที่คำนวณ
-              stars: 4, // ตัวอย่างจำนวนดาว
-              feedback: 'ทำได้ดี แต่ควรฝึกให้ชัดเจนขึ้น',
-            ),
-          ),
-        );
+        // // เมื่อฝึกเขียนตัวอักษรสุดท้าย
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => EvaluationPage(
+        //       character: _character,
+        //       score: 80.0, // ตัวอย่างคะแนนที่คำนวณ
+        //       stars: 4, // ตัวอย่างจำนวนดาว
+        //       feedback: 'ทำได้ดี แต่ควรฝึกให้ชัดเจนขึ้น',
+        //     ),
+        //   ),
+        // );
       }
     });
   }

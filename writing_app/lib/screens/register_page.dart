@@ -128,41 +128,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    bool obscureText = false,
-    required TextEditingController controller,
-    String? errorText,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          labelText: label,
-          hintText: hint,
-          labelStyle: GoogleFonts.itim(fontSize: 18),
-          errorText: errorText,
-        ),
-        onChanged: (_) => _validateField(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,89 +136,135 @@ class _RegisterPageState extends State<RegisterPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/Writing_1.png'),
-            fit: BoxFit.cover,
+      body: Stack(
+        children: [
+          Positioned(
+            top: -600, // เลื่อนภาพพื้นหลังขึ้น 50px
+            left: 0,
+            right: 0,
+            child: Image.asset(
+              'assets/Writing_1.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter, // ปรับตำแหน่งพื้นหลัง
+            ),
           ),
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'สมัครสมาชิก',
-                    style: GoogleFonts.mali(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 255, 0, 0),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                      label: 'ชื่อ',
-                      hint: 'กรุณากรอกชื่อ',
-                      controller: nameController,
-                      errorText: nameError),
-                  const SizedBox(height: 8),
-                  _buildTextField(
-                      label: 'นามสกุล',
-                      hint: 'กรุณากรอกนามสกุล',
-                      controller: surnameController,
-                      errorText: surnameError),
-                  const SizedBox(height: 8),
-                  _buildTextField(
-                      label: 'เบอร์โทร',
-                      hint: 'กรุณากรอกเบอร์โทร',
-                      controller: phoneController,
-                      errorText: phoneError),
-                  const SizedBox(height: 8),
-                  _buildTextField(
-                      label: 'E-mail',
-                      hint: 'กรุณากรอกอีเมล',
-                      controller: emailController,
-                      errorText: emailError),
-                  const SizedBox(height: 8),
-                  _buildTextField(
-                      label: 'Password',
-                      hint: 'กรุณากรอกรหัสผ่าน',
-                      obscureText: true,
-                      controller: passwordController,
-                      errorText: passwordError),
-                  const SizedBox(height: 8),
-                  _buildTextField(
-                      label: 'ยืนยันรหัสผ่าน',
-                      hint: 'กรุณากรอกยืนยันรหัสผ่าน',
-                      obscureText: true,
-                      controller: confirmPasswordController,
-                      errorText: confirmPasswordError),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: 300,
-                    child: ElevatedButton(
-                      onPressed: _register,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'สมัครสมาชิก',
+                      style: GoogleFonts.mali(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
                       ),
-                      child: Text('สมัครสมาชิก',
-                          style: GoogleFonts.itim(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                        label: 'ชื่อ',
+                        hint: 'กรุณากรอกชื่อ',
+                        controller: nameController,
+                        errorText: nameError),
+                    const SizedBox(height: 8),
+                    _buildTextField(
+                        label: 'นามสกุล',
+                        hint: 'กรุณากรอกนามสกุล',
+                        controller: surnameController,
+                        errorText: surnameError),
+                    const SizedBox(height: 8),
+                    _buildTextField(
+                        label: 'เบอร์โทร',
+                        hint: 'กรุณากรอกเบอร์โทร',
+                        controller: phoneController,
+                        errorText: phoneError),
+                    const SizedBox(height: 8),
+                    _buildTextField(
+                        label: 'E-mail',
+                        hint: 'กรุณากรอกอีเมล',
+                        controller: emailController,
+                        errorText: emailError),
+                    const SizedBox(height: 8),
+                    _buildTextField(
+                        label: 'Password',
+                        hint: 'กรุณากรอกรหัสผ่าน',
+                        obscureText: true,
+                        controller: passwordController,
+                        errorText: passwordError),
+                    const SizedBox(height: 8),
+                    _buildTextField(
+                        label: 'ยืนยันรหัสผ่าน',
+                        hint: 'กรุณากรอกยืนยันรหัสผ่าน',
+                        obscureText: true,
+                        controller: confirmPasswordController,
+                        errorText: confirmPasswordError),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: 300, // ปรับขนาดปุ่มให้คงที่
+                      child: ElevatedButton(
+                        onPressed: _register,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade700,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text('สมัครสมาชิก',
+                            style: GoogleFonts.itim(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+// ปรับฟังก์ชัน _buildTextField ให้รองรับความกว้างที่กำหนดเอง
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    bool obscureText = false,
+    required TextEditingController controller,
+    String? errorText,
+  }) {
+    return SizedBox(
+      width:
+          MediaQuery.of(context).size.width * 0.5, // ปรับขนาดให้เหมาะกับหน้าจอ
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: TextField(
+          controller: controller,
+          obscureText: obscureText,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            labelText: label,
+            hintText: hint,
+            labelStyle: GoogleFonts.itim(fontSize: 18),
+            errorText: errorText,
+          ),
+          onChanged: (_) => _validateField(),
         ),
       ),
     );
