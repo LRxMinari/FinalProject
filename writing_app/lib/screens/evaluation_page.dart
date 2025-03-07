@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
-import 'language_selection_page.dart'; // นำเข้าหน้าเลือกหมวดหมู่
+import 'package:google_fonts/google_fonts.dart';
 
 class EvaluationPage extends StatefulWidget {
-  const EvaluationPage({super.key});
+  final String character;
+
+  const EvaluationPage({super.key, required this.character});
 
   @override
   _EvaluationPageState createState() => _EvaluationPageState();
 }
 
 class _EvaluationPageState extends State<EvaluationPage> {
-  String selectedCharacter = 'ก'; // ตัวอักษรที่เลือก
+  late String selectedCharacter;
   double score = 65.0;
   int stars = 2;
   String feedback = 'ลองฝึกการเขียนเส้นโค้งให้ราบรื่นขึ้น';
+  bool isThaiAlphabet = true;
 
   final List<String> thaiAlphabet = [
     'ก',
@@ -65,97 +68,134 @@ class _EvaluationPageState extends State<EvaluationPage> {
       List.generate(26, (index) => String.fromCharCode(65 + index));
 
   @override
+  void initState() {
+    super.initState();
+    selectedCharacter = widget.character;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEDE7F6),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              const Text(
-                'ตัวอย่าง',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.purple[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(
-                            selectedCharacter,
-                            style: const TextStyle(
-                              fontSize: 120,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 2,
-                      child: Column(
-                        children: [
-                          const Text(
-                            'พยัญชนะ',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          Expanded(
-                            child: GridView.count(
-                              crossAxisCount: 5,
-                              childAspectRatio: 1.2,
-                              children: [
-                                ...thaiAlphabet
-                                    .map((char) => buildCharButton(char)),
-                                ...englishAlphabet
-                                    .map((char) => buildCharButton(char)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'ตัวอย่าง',
+          style: GoogleFonts.mali(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: Row(
                 children: [
-                  Text(
-                    '${score.toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 8),
-                  Row(
-                    children: List.generate(
-                      3,
-                      (index) => Icon(
-                        index < stars ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.purple[100],
+                        borderRadius: BorderRadius.circular(16),
                       ),
+                      child: Center(
+                        child: Text(
+                          selectedCharacter,
+                          style: GoogleFonts.mali(
+                            fontSize: 140,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      children: [
+                        ToggleButtons(
+                          isSelected: [isThaiAlphabet, !isThaiAlphabet],
+                          onPressed: (index) {
+                            setState(() {
+                              isThaiAlphabet = index == 0;
+                              selectedCharacter = isThaiAlphabet ? 'ก' : 'A';
+                            });
+                          },
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text('ภาษาไทย',
+                                  style: GoogleFonts.mali(fontSize: 18)),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text('ภาษาอังกฤษ',
+                                  style: GoogleFonts.mali(fontSize: 18)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Expanded(
+                          child: GridView.count(
+                            crossAxisCount: 5,
+                            childAspectRatio: 1.2,
+                            children: (isThaiAlphabet
+                                    ? thaiAlphabet
+                                    : englishAlphabet)
+                                .map((char) => buildCharButton(char))
+                                .toList(),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                feedback,
-                style: const TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '${score.toStringAsFixed(1)}%',
+                  style: GoogleFonts.mali(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Row(
+                  children: List.generate(
+                    3,
+                    (index) => Icon(
+                      index < stars ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              feedback,
+              style: GoogleFonts.mali(fontSize: 16, color: Colors.black54),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );
@@ -176,7 +216,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
         decoration: BoxDecoration(
           color: selectedCharacter == char ? Colors.purple[300] : Colors.white,
           borderRadius: BorderRadius.circular(8),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: Colors.black26,
               blurRadius: 3,
@@ -187,8 +227,8 @@ class _EvaluationPageState extends State<EvaluationPage> {
         child: Center(
           child: Text(
             char,
-            style: TextStyle(
-              fontSize: 18,
+            style: GoogleFonts.mali(
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: selectedCharacter == char ? Colors.white : Colors.black,
             ),

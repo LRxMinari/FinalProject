@@ -20,9 +20,7 @@ class HomePage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
               );
             },
           ),
@@ -79,18 +77,13 @@ class HomePage extends StatelessWidget {
                         children: [
                           GestureDetector(
                             onTap: () {
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder: (context) => const EvaluationPage(
-                              //       character: 'ก',
-                              //       score: 85.0,
-                              //       stars: 4,
-                              //       feedback:
-                              //           'ดีมาก! ลองปรับการเขียนหัวตัวอักษรให้คมขึ้น.',
-                              //     ),
-                              //   ),
-                              // );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const EvaluationPage(
+                                      character: 'ก'), // ✅ ส่งค่าถูกต้องแล้ว
+                                ),
+                              );
                             },
                             child: Image.asset(
                               'assets/evaluate_icon.png',
