@@ -81,7 +81,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'ตัวอย่าง',
+          'การประเมินผล',
           style: GoogleFonts.mali(
             fontSize: 24,
             fontWeight: FontWeight.bold,

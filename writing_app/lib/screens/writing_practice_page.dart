@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'evaluation_page.dart'; // นำเข้าหน้าประเมินผล
+import 'dart:ui' as ui;
+import 'evaluation_page.dart';
 
 class WritingPracticePage extends StatefulWidget {
   final String language;
@@ -42,12 +43,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         'ฐ',
         'ฑ',
         'ฒ',
-        'ญ',
-        'ฎ',
-        'ฏ',
-        'ฐ',
-        'ฑ',
-        'ฒ',
         'ณ',
         'ด',
         'ต',
@@ -77,7 +72,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       ];
     } else if (widget.language == 'English') {
       _charactersToPractice = List.generate(26, (index) {
-        return String.fromCharCode(index + 65); // A-Z
+        return String.fromCharCode(index + 65);
       });
     } else {
       _charactersToPractice = [];
@@ -90,19 +85,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         _currentCharacterIndex++;
         _character = _charactersToPractice[_currentCharacterIndex];
         points.clear();
-      } else {
-        // // เมื่อฝึกเขียนตัวอักษรสุดท้าย
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => EvaluationPage(
-        //       character: _character,
-        //       score: 80.0, // ตัวอย่างคะแนนที่คำนวณ
-        //       stars: 4, // ตัวอย่างจำนวนดาว
-        //       feedback: 'ทำได้ดี แต่ควรฝึกให้ชัดเจนขึ้น',
-        //     ),
-        //   ),
-        // );
       }
     });
   }
@@ -110,99 +92,97 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFDF6E4),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      backgroundColor: const Color(0xFFFDF6E4),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'ฝึกเขียนตัวอักษร',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/Writing_1.png',
+              fit: BoxFit.cover,
             ),
-            const SizedBox(height: 20),
-            Text(
-              'ตัวอักษร: $_character',
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
-            GestureDetector(
-              onPanUpdate: (details) {
-                setState(() {
-                  points.add(details.localPosition);
-                });
-              },
-              onPanEnd: (_) {
-                points.add(null);
-              },
-              child: CustomPaint(
-                size: const Size(300, 300),
-                painter: MyPainter(points, _character),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
+          ),
+          Positioned(
+            top: 40,
+            left: 16,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, size: 30, color: Colors.black),
               onPressed: () {
-                setState(() {
-                  points.clear();
-                });
+                Navigator.pop(context);
               },
-              child: const Text('เริ่มใหม่'),
             ),
-            const SizedBox(height: 20),
-            // ปรับปุ่ม ถัดไป เป็น เสร็จสิ้น เมื่อถึงตัวอักษรสุดท้าย
-            ElevatedButton(
-              onPressed: _nextCharacter,
-              child: Text(
-                  _currentCharacterIndex == _charactersToPractice.length - 1
-                      ? 'เสร็จสิ้น'
-                      : 'ถัดไป'),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'ฝึกเขียนตัวอักษร',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  width: 300,
+                  height: 350,
+                  decoration: BoxDecoration(
+                    color: Colors.green[200],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: const Size(300, 300),
+                        painter: CharacterGuidePainter(_character),
+                      ),
+                      GestureDetector(
+                        onPanUpdate: (details) {
+                          setState(() {
+                            points.add(details.localPosition);
+                          });
+                        },
+                        onPanEnd: (_) {
+                          points.add(null);
+                        },
+                        child: CustomPaint(
+                          size: const Size(300, 300),
+                          painter: MyPainter(points),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      points.clear();
+                    });
+                  },
+                  child: const Text('เริ่มใหม่'),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _nextCharacter,
+                  child: Text(
+                      _currentCharacterIndex == _charactersToPractice.length - 1
+                          ? 'เสร็จสิ้น'
+                          : 'ถัดไป'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class MyPainter extends CustomPainter {
-  final List<Offset?> points; // จุดที่ผู้ใช้วาด
-  final String character; // ตัวอักษรลายน้ำ
+  final List<Offset?> points;
 
-  MyPainter(this.points, this.character);
+  MyPainter(this.points);
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. สร้างตัวอักษรลายน้ำ
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: character,
-        style: TextStyle(
-          fontSize: size.width * 0.6,
-          color: Colors.grey.withOpacity(0.4), // สีลายน้ำ
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout();
-    final offset = Offset(
-      (size.width - textPainter.width) / 2,
-      (size.height - textPainter.height) / 2,
-    );
-
-    textPainter.paint(canvas, offset);
-
-    // 2. วาดเส้นจากการลากของผู้ใช้
     final paint = Paint()
       ..color = Colors.black
       ..strokeCap = StrokeCap.round
@@ -218,5 +198,44 @@ class MyPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
     return true;
+  }
+}
+
+class CharacterGuidePainter extends CustomPainter {
+  final String character;
+
+  CharacterGuidePainter(this.character);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(size.width * 0.2, size.height * 0.8)
+      ..lineTo(size.width * 0.5, size.height * 0.2)
+      ..lineTo(size.width * 0.8, size.height * 0.8);
+
+    final dashedPaint = Paint()
+      ..color = Colors.black.withOpacity(0.5)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    drawDashedPath(canvas, path, dashedPaint);
+  }
+
+  void drawDashedPath(Canvas canvas, Path path, Paint paint) {
+    Path dashPath = Path();
+    for (var metric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        dashPath.addPath(
+            metric.extractPath(distance, distance + 10), Offset.zero);
+        distance += 20;
+      }
+    }
+    canvas.drawPath(dashPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return false;
   }
 }
