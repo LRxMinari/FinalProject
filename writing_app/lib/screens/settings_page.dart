@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -129,7 +131,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      await GoogleSignIn()
+                          .signOut(); // สำคัญสำหรับผู้ใช้ที่ล็อกอินผ่าน Google
+
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(

@@ -22,8 +22,10 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   @override
   void initState() {
     super.initState();
-    _character = widget.character;
+    _initializeCharacters();
+  }
 
+  void _initializeCharacters() {
     if (widget.language == 'ภาษาไทย') {
       _charactersToPractice = [
         'ก',
@@ -71,11 +73,16 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         'ฮ'
       ];
     } else if (widget.language == 'English') {
-      _charactersToPractice = List.generate(26, (index) {
-        return String.fromCharCode(index + 65);
-      });
+      _charactersToPractice =
+          List.generate(26, (index) => String.fromCharCode(index + 65));
     } else {
       _charactersToPractice = [];
+    }
+
+    if (_charactersToPractice.isNotEmpty) {
+      _character = _charactersToPractice[_currentCharacterIndex];
+    } else {
+      _character = '?'; // กรณีไม่มีตัวอักษรให้แสดงค่าเริ่มต้น
     }
   }
 

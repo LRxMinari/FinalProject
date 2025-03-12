@@ -4,6 +4,7 @@ import 'home_page.dart'; // นำเข้าไฟล์ HomePage
 import 'register_page.dart'; // นำเข้าไฟล์ Register Page
 import 'forgetpassword_page.dart'; // นำเข้าไฟล์ Forget Password Page
 import 'package:firebase_auth/firebase_auth.dart'; // เพิ่มการนำเข้า FirebaseAuth
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -212,6 +213,28 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
+                  // **ปุ่มเข้าสู่ระบบด้วย Google**
+                  SizedBox(
+                    width: 500,
+                    child: ElevatedButton.icon(
+                      onPressed: _signInWithGoogle,
+                      icon: Image.asset(
+                        'assets/google_logo.png', // ไอคอน Google (ต้องมีไฟล์ใน assets)
+                        height: 24,
+                      ),
+                      label: Text('Sign in with Google',
+                          style: GoogleFonts.itim(
+                              fontSize: 20, color: Colors.black)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -219,6 +242,40 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
     );
+  }
+
+// **ฟังก์ชันเข้าสู่ระบบด้วย Google**
+  Future<void> _signInWithGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // ผู้ใช้กดยกเลิกการเข้าสู่ระบบ
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // เมื่อเข้าสู่ระบบสำเร็จ ให้ไปที่หน้า HomePage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    } catch (e) {
+      print("Google Sign-In Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("เข้าสู่ระบบด้วย Google ล้มเหลว")),
+      );
+    }
   }
 
 // **ฟังก์ชันสร้างช่องกรอกข้อมูล**
