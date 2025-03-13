@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
 import 'dart:ui' as ui;
-import 'evaluation_page.dart';
 
 class WritingPracticePage extends StatefulWidget {
   final String language;
   final String character;
 
-  const WritingPracticePage(
-      {super.key, required this.language, required this.character});
+  const WritingPracticePage({
+    super.key,
+    required this.language,
+    required this.character,
+  });
 
   @override
   _WritingPracticePageState createState() => _WritingPracticePageState();
@@ -15,21 +18,23 @@ class WritingPracticePage extends StatefulWidget {
 
 class _WritingPracticePageState extends State<WritingPracticePage> {
   List<Offset?> points = [];
-  String _character = '';
   late List<String> _charactersToPractice;
   int _currentCharacterIndex = 0;
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
-    _initializeCharacters();
-  }
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
 
-  void _initializeCharacters() {
-    if (widget.language == 'ภาษาไทย') {
+    print("Selected Language: ${widget.language}"); // ✅ เช็คค่าภาษา
+
+    if (widget.language == 'ภาษาไทย' || widget.language == 'Thai') {
       _charactersToPractice = [
         'ก',
         'ข',
+        'ฃ',
         'ค',
         'ฅ',
         'ฆ',
@@ -73,39 +78,93 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         'ฮ'
       ];
     } else if (widget.language == 'English') {
-      _charactersToPractice =
-          List.generate(26, (index) => String.fromCharCode(index + 65));
+      _charactersToPractice = List.generate(26, (index) {
+        return String.fromCharCode(index + 65);
+      });
     } else {
       _charactersToPractice = [];
+      print("⚠️ ไม่รองรับภาษา: ${widget.language}");
     }
 
-    if (_charactersToPractice.isNotEmpty) {
-      _character = _charactersToPractice[_currentCharacterIndex];
-    } else {
-      _character = '?'; // กรณีไม่มีตัวอักษรให้แสดงค่าเริ่มต้น
-    }
+    print(
+        "Characters to practice: $_charactersToPractice"); // ✅ เช็คว่ามีค่าจริงไหม
+
+    // ตั้งค่า index ให้ถูกต้อง
+    _currentCharacterIndex = _charactersToPractice.isNotEmpty ? 0 : -1;
   }
 
   void _nextCharacter() {
+    if (_charactersToPractice.isEmpty)
+      return; // ถ้าไม่มีตัวอักษร ให้ return ทันที
+
     setState(() {
       if (_currentCharacterIndex < _charactersToPractice.length - 1) {
         _currentCharacterIndex++;
-        _character = _charactersToPractice[_currentCharacterIndex];
         points.clear();
+      } else {
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (mounted) _showCompletionDialog();
+        });
       }
     });
   }
 
+  void _showCompletionDialog() async {
+    print("📢 _showCompletionDialog() ทำงาน");
+
+    _confettiController.play();
+
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (!mounted) return; // ป้องกัน Context หมดอายุ
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('🎉 ยินดีด้วย! 🎉'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('คุณฝึกครบทุกตัวแล้ว! เก่งมาก!'),
+              const SizedBox(height: 10),
+              Image.asset('assets/congrats.png', width: 100, height: 100),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  _currentCharacterIndex = 0;
+                  points.clear();
+                });
+              },
+              child: const Text('เริ่มใหม่'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: const Text('กลับหน้าหลัก'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    print(
+        "Current index: $_currentCharacterIndex / Total: ${_charactersToPractice.length}");
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/Writing_1.png',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/Writing_1.png', fit: BoxFit.cover),
           ),
           Positioned(
             top: 40,
@@ -121,10 +180,9 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'ฝึกเขียนตัวอักษร',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
+                const Text('ฝึกเขียนตัวอักษร',
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
                 Container(
                   width: 300,
@@ -136,10 +194,25 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      CustomPaint(
-                        size: const Size(300, 300),
-                        painter: CharacterGuidePainter(_character),
-                      ),
+                      (_charactersToPractice.isNotEmpty &&
+                              _currentCharacterIndex >= 0 &&
+                              _currentCharacterIndex <
+                                  _charactersToPractice.length)
+                          ? Image.asset(
+                              'assets/Thai/${_charactersToPractice[_currentCharacterIndex]}.jpg',
+                              width: 280,
+                              height: 330,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Text('ไม่พบรูปภาพ',
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.red));
+                              },
+                            )
+                          : const Text(
+                              'ไม่มีตัวอักษรให้ฝึก',
+                              style: TextStyle(fontSize: 18, color: Colors.red),
+                            ),
                       GestureDetector(
                         onPanUpdate: (details) {
                           setState(() {
@@ -159,11 +232,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      points.clear();
-                    });
-                  },
+                  onPressed: () => setState(() => points.clear()),
                   child: const Text('เริ่มใหม่'),
                 ),
                 const SizedBox(height: 20),
@@ -173,6 +242,18 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                       _currentCharacterIndex == _charactersToPractice.length - 1
                           ? 'เสร็จสิ้น'
                           : 'ถัดไป'),
+                ),
+                ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                  colors: [
+                    Colors.blue,
+                    Colors.green,
+                    Colors.pink,
+                    Colors.orange,
+                    Colors.purple
+                  ],
                 ),
               ],
             ),
@@ -185,7 +266,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
 class MyPainter extends CustomPainter {
   final List<Offset?> points;
-
   MyPainter(this.points);
 
   @override
@@ -203,46 +283,5 @@ class MyPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
-  }
-}
-
-class CharacterGuidePainter extends CustomPainter {
-  final String character;
-
-  CharacterGuidePainter(this.character);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(size.width * 0.2, size.height * 0.8)
-      ..lineTo(size.width * 0.5, size.height * 0.2)
-      ..lineTo(size.width * 0.8, size.height * 0.8);
-
-    final dashedPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-
-    drawDashedPath(canvas, path, dashedPaint);
-  }
-
-  void drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    Path dashPath = Path();
-    for (var metric in path.computeMetrics()) {
-      double distance = 0.0;
-      while (distance < metric.length) {
-        dashPath.addPath(
-            metric.extractPath(distance, distance + 10), Offset.zero);
-        distance += 20;
-      }
-    }
-    canvas.drawPath(dashPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
-  }
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
 }

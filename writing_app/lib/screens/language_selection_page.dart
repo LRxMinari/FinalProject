@@ -98,14 +98,19 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
       _selectedLanguage = language;
     });
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WritingPracticePage(
-          language: language,
-          character: character,
+    String selectedLanguage = 'ภาษาไทย'; // หรือ 'English'
+    if (selectedLanguage.isEmpty) {
+      print("⚠️ Language is empty!");
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WritingPracticePage(
+            language: language,
+            character: character,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 }
