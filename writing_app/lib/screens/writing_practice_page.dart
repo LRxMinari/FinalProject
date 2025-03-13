@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
+import 'evaluation_page.dart';
 import 'dart:ui' as ui;
 
 class WritingPracticePage extends StatefulWidget {
@@ -110,13 +111,18 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   }
 
   void _showCompletionDialog() async {
-    print("📢 _showCompletionDialog() ทำงาน");
+    print("📢 _showCompletionDialog() เริ่มทำงาน");
 
     _confettiController.play();
 
     await Future.delayed(const Duration(milliseconds: 300));
 
-    if (!mounted) return; // ป้องกัน Context หมดอายุ
+    if (!mounted) {
+      print("⚠ _showCompletionDialog() ถูกเรียก แต่ context หมดอายุ");
+      return;
+    }
+
+    print("✅ _showCompletionDialog() เปิด Dialog");
 
     showDialog(
       context: context,
@@ -129,7 +135,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
             children: [
               const Text('คุณฝึกครบทุกตัวแล้ว! เก่งมาก!'),
               const SizedBox(height: 10),
-              Image.asset('assets/congrats.png', width: 100, height: 100),
+              Image.asset('assets/congrats.gif', width: 300, height: 300),
             ],
           ),
           actions: [
@@ -146,9 +152,15 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        EvaluationPage(character: 'ก'), // เริ่มที่ "ก" เสมอ
+                  ),
+                );
               },
-              child: const Text('กลับหน้าหลัก'),
+              child: const Text('ไปหน้าประเมินผล'),
             ),
           ],
         );

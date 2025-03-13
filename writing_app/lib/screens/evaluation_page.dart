@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'home_page.dart';
 
 class EvaluationPage extends StatefulWidget {
   final String character;
@@ -91,7 +92,13 @@ class _EvaluationPageState extends State<EvaluationPage> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+              (route) => false, // ล้าง stack ทั้งหมด ทำให้กลับไปหน้าแรกเลย
+            );
+          },
         ),
       ),
       body: Padding(
