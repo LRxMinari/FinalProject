@@ -196,51 +196,63 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                     style:
                         TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
-                Container(
-                  width: 300,
-                  height: 350,
-                  decoration: BoxDecoration(
-                    color: Colors.green[200],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      (_charactersToPractice.isNotEmpty &&
-                              _currentCharacterIndex >= 0 &&
-                              _currentCharacterIndex <
-                                  _charactersToPractice.length)
-                          ? Image.asset(
-                              'assets/Thai/${_charactersToPractice[_currentCharacterIndex]}.jpg',
-                              width: 280,
-                              height: 330,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Text('ไม่พบรูปภาพ',
-                                    style: TextStyle(
-                                        fontSize: 16, color: Colors.red));
-                              },
-                            )
-                          : const Text(
-                              'ไม่มีตัวอักษรให้ฝึก',
-                              style: TextStyle(fontSize: 18, color: Colors.red),
-                            ),
-                      GestureDetector(
-                        onPanUpdate: (details) {
-                          setState(() {
-                            points.add(details.localPosition);
-                          });
-                        },
-                        onPanEnd: (_) {
-                          points.add(null);
-                        },
-                        child: CustomPaint(
-                          size: const Size(300, 300),
-                          painter: MyPainter(points),
-                        ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    double imageWidth = 350;
+                    double imageHeight = 200; // 🔥 ลดความสูงลงจากเดิม
+
+                    return Container(
+                      width: imageWidth,
+                      height: imageHeight, // ✅ ลดขนาดความสูง
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(252, 255, 209, 1),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
-                  ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          (_charactersToPractice.isNotEmpty &&
+                                  _currentCharacterIndex >= 0 &&
+                                  _currentCharacterIndex <
+                                      _charactersToPractice.length)
+                              ? Image.asset(
+                                  widget.language == 'English'
+                                      ? 'assets/English/${_charactersToPractice[_currentCharacterIndex]}.png'
+                                      : 'assets/Thai/${_charactersToPractice[_currentCharacterIndex]}.jpg',
+                                  width: imageWidth,
+                                  height:
+                                      imageHeight, // ✅ ลดความสูงของภาพให้ตรงกับ Container
+                                  fit: BoxFit.fitHeight, // ✅ ป้องกันภาพเกินกรอบ
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Text('ไม่พบรูปภาพ',
+                                        style: TextStyle(
+                                            fontSize: 16, color: Colors.red));
+                                  },
+                                )
+                              : const Text(
+                                  'ไม่มีตัวอักษรให้ฝึก',
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.red),
+                                ),
+                          GestureDetector(
+                            onPanUpdate: (details) {
+                              setState(() {
+                                points.add(details.localPosition);
+                              });
+                            },
+                            onPanEnd: (_) {
+                              points.add(null);
+                            },
+                            child: CustomPaint(
+                              size: Size(imageWidth,
+                                  imageHeight), // ✅ ปรับให้เล็กลงตามภาพ
+                              painter: MyPainter(points),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(

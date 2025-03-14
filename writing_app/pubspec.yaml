@@ -37,6 +37,7 @@ flutter:
     - assets/google_logo.png
     - assets/Thai/
     - assets/congrats.gif
+    - assets/English/
 
   # To add assets to your application, uncomment and add paths here.
   # assets:
