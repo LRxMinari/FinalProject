@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'evaluation_page.dart';
+import 'package:flutter/rendering.dart';
 import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class WritingPracticePage extends StatefulWidget {
   final String language;
@@ -22,6 +27,8 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   late List<String> _charactersToPractice;
   int _currentCharacterIndex = 0;
   late ConfettiController _confettiController;
+
+  GlobalKey _repaintBoundaryKey = GlobalKey(); // 🔥 ใช้เพื่อจับภาพ
 
   @override
   void initState() {
@@ -92,6 +99,49 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
     // ตั้งค่า index ให้ถูกต้อง
     _currentCharacterIndex = _charactersToPractice.isNotEmpty ? 0 : -1;
+  }
+
+  Future<void> requestPermissions() async {
+    if (await Permission.storage.request().isGranted) {
+      print("✅ ได้รับสิทธิ์จัดการไฟล์แล้ว");
+    } else {
+      print("❌ ถูกปฏิเสธการเข้าถึงไฟล์");
+    }
+  }
+
+  GlobalKey repaintKey = GlobalKey();
+
+  Future<void> uploadImageToFirebase(GlobalKey repaintKey) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        RenderRepaintBoundary? boundary = repaintKey.currentContext
+            ?.findRenderObject() as RenderRepaintBoundary?;
+
+        if (boundary == null) {
+          print("❌ ไม่พบ RepaintBoundary");
+          return;
+        }
+
+        ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+        ByteData? byteData =
+            await image.toByteData(format: ui.ImageByteFormat.png);
+
+        if (byteData != null) {
+          Uint8List pngBytes = byteData.buffer.asUint8List();
+
+          Reference ref = FirebaseStorage.instance.ref().child(
+              "user_writings/writing_${DateTime.now().millisecondsSinceEpoch}.png");
+          UploadTask uploadTask = ref.putData(pngBytes);
+
+          TaskSnapshot snapshot = await uploadTask;
+          String downloadUrl = await snapshot.ref.getDownloadURL();
+
+          print("✅ รูปถูกอัปโหลดที่: $downloadUrl");
+        }
+      } catch (e) {
+        print("❌ เกิดข้อผิดพลาด: $e");
+      }
+    });
   }
 
   void _nextCharacter() {
@@ -196,76 +246,64 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                     style:
                         TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    double imageWidth = 350;
-                    double imageHeight = 200; // 🔥 ลดความสูงลงจากเดิม
-
-                    return Container(
-                      width: imageWidth,
-                      height: imageHeight, // ✅ ลดขนาดความสูง
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(252, 255, 209, 1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          (_charactersToPractice.isNotEmpty &&
-                                  _currentCharacterIndex >= 0 &&
-                                  _currentCharacterIndex <
-                                      _charactersToPractice.length)
-                              ? Image.asset(
-                                  widget.language == 'English'
-                                      ? 'assets/English/${_charactersToPractice[_currentCharacterIndex]}.png'
-                                      : 'assets/Thai/${_charactersToPractice[_currentCharacterIndex]}.jpg',
-                                  width: imageWidth,
-                                  height:
-                                      imageHeight, // ✅ ลดความสูงของภาพให้ตรงกับ Container
-                                  fit: BoxFit.fitHeight, // ✅ ป้องกันภาพเกินกรอบ
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Text('ไม่พบรูปภาพ',
-                                        style: TextStyle(
-                                            fontSize: 16, color: Colors.red));
-                                  },
-                                )
-                              : const Text(
-                                  'ไม่มีตัวอักษรให้ฝึก',
-                                  style: TextStyle(
-                                      fontSize: 18, color: Colors.red),
-                                ),
-                          GestureDetector(
-                            onPanUpdate: (details) {
-                              setState(() {
-                                points.add(details.localPosition);
-                              });
-                            },
-                            onPanEnd: (_) {
-                              points.add(null);
-                            },
-                            child: CustomPaint(
-                              size: Size(imageWidth,
-                                  imageHeight), // ✅ ปรับให้เล็กลงตามภาพ
-                              painter: MyPainter(points),
-                            ),
+                RepaintBoundary(
+                  key: _repaintBoundaryKey, // 🔥 ครอบส่วนที่ต้องการบันทึก
+                  child: Container(
+                    width: 350,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(252, 255, 209, 1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        (_charactersToPractice.isNotEmpty &&
+                                _currentCharacterIndex >= 0)
+                            ? Image.asset(
+                                widget.language == 'English'
+                                    ? 'assets/English/${_charactersToPractice[_currentCharacterIndex]}.png'
+                                    : 'assets/Thai/${_charactersToPractice[_currentCharacterIndex]}.jpg',
+                                width: 350,
+                                height: 200,
+                                fit: BoxFit.fitHeight,
+                              )
+                            : const Text('ไม่มีตัวอักษรให้ฝึก',
+                                style:
+                                    TextStyle(fontSize: 18, color: Colors.red)),
+                        GestureDetector(
+                          onPanUpdate: (details) {
+                            setState(() {
+                              points.add(details.localPosition);
+                            });
+                          },
+                          onPanEnd: (_) {
+                            points.add(null);
+                          },
+                          child: CustomPaint(
+                            size: const Size(350, 200),
+                            painter: MyPainter(points),
                           ),
-                        ],
-                      ),
-                    );
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                    onPressed: () => setState(() => points.clear()),
+                    child: const Text('เริ่มใหม่')),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {}); // ✅ กระตุ้นให้ UI build ใหม่
+                    Future.delayed(Duration(milliseconds: 100), () {
+                      // ✅ รอให้ UI build เสร็จ
+                      uploadImageToFirebase(_repaintBoundaryKey);
+                    });
                   },
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () => setState(() => points.clear()),
-                  child: const Text('เริ่มใหม่'),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _nextCharacter,
-                  child: Text(
-                      _currentCharacterIndex == _charactersToPractice.length - 1
-                          ? 'เสร็จสิ้น'
-                          : 'ถัดไป'),
+                  child: Text('บันทึกไป Firebase'),
                 ),
                 ConfettiWidget(
                   confettiController: _confettiController,

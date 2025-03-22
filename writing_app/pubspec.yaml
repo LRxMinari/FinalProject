@@ -12,13 +12,15 @@ dependencies:
     sdk: flutter
   google_fonts: ^6.1.0
 
+  permission_handler: ^11.4.0
+
   # The following adds the Cupertino Icons font to your application.
   cupertino_icons: ^1.0.2
-  firebase_core: ^3.10.0 # Use for initializing Firebase
+  firebase_core: ^3.12.1 # Use for initializing Firebase
   firebase_auth: ^5.4.0 # Use for authentication with Firebase
   firebase_auth_web: ^5.13.6 # Firebase Authentication support for the web
   cloud_firestore: ^5.6.1 # Use for Firestore database
-  firebase_storage: ^12.4.0 # Use for Firebase Storage
+  firebase_storage: ^12.4.4 # Use for Firebase Storage
   google_sign_in: ^6.3.0
   confetti: ^0.7.0 # ใช้เวอร์ชันล่าสุด (อัปเดตเวอร์ชันจาก pub.dev ได้)
 
