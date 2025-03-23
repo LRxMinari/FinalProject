@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WritingPracticePage extends StatefulWidget {
   final String language;
@@ -111,37 +112,52 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
   GlobalKey repaintKey = GlobalKey();
 
+  String getCurrentUserUID() {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.uid ?? "unknown_user"; // ถ้าไม่มี user ให้ใช้ "unknown_user"
+  }
+
   Future<void> uploadImageToFirebase(GlobalKey repaintKey) async {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        RenderRepaintBoundary? boundary = repaintKey.currentContext
-            ?.findRenderObject() as RenderRepaintBoundary?;
+    try {
+      // ✅ ดึง UID ของผู้ใช้ที่ล็อกอิน
+      String uid = getCurrentUserUID();
 
-        if (boundary == null) {
-          print("❌ ไม่พบ RepaintBoundary");
-          return;
-        }
+      // ✅ ดึงภาษาที่ผู้ใช้กำลังฝึก
+      String languageFolder = widget.language == "English" ? "English" : "Thai";
 
-        ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-        ByteData? byteData =
-            await image.toByteData(format: ui.ImageByteFormat.png);
+      RenderRepaintBoundary? boundary = repaintKey.currentContext
+          ?.findRenderObject() as RenderRepaintBoundary?;
 
-        if (byteData != null) {
-          Uint8List pngBytes = byteData.buffer.asUint8List();
-
-          Reference ref = FirebaseStorage.instance.ref().child(
-              "user_writings/writing_${DateTime.now().millisecondsSinceEpoch}.png");
-          UploadTask uploadTask = ref.putData(pngBytes);
-
-          TaskSnapshot snapshot = await uploadTask;
-          String downloadUrl = await snapshot.ref.getDownloadURL();
-
-          print("✅ รูปถูกอัปโหลดที่: $downloadUrl");
-        }
-      } catch (e) {
-        print("❌ เกิดข้อผิดพลาด: $e");
+      if (boundary == null) {
+        print("❌ ไม่พบ RepaintBoundary");
+        return;
       }
-    });
+
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData != null) {
+        Uint8List pngBytes = byteData.buffer.asUint8List();
+
+        // ✅ บันทึกลงโฟลเดอร์ของผู้ใช้ และแยกตามภาษา
+        Reference ref = FirebaseStorage.instance.ref().child(
+            "user_writings/$uid/$languageFolder/writing_${DateTime.now().millisecondsSinceEpoch}.png");
+
+        UploadTask uploadTask = ref.putData(pngBytes);
+        TaskSnapshot snapshot = await uploadTask;
+        String downloadUrl = await snapshot.ref.getDownloadURL();
+
+        print("✅ รูปถูกอัปโหลดที่: $downloadUrl");
+
+        // ✅ ไปยังตัวอักษรถัดไป
+        _nextCharacter();
+      } else {
+        print("❌ ไม่สามารถสร้าง ByteData จากภาพ");
+      }
+    } catch (e) {
+      print("❌ เกิดข้อผิดพลาด: $e");
+    }
   }
 
   void _nextCharacter() {
@@ -296,12 +312,9 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                     child: const Text('เริ่มใหม่')),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
-                    setState(() {}); // ✅ กระตุ้นให้ UI build ใหม่
-                    Future.delayed(Duration(milliseconds: 100), () {
-                      // ✅ รอให้ UI build เสร็จ
-                      uploadImageToFirebase(_repaintBoundaryKey);
-                    });
+                  onPressed: () async {
+                    await uploadImageToFirebase(_repaintBoundaryKey);
+                    // ❌ ไม่ต้องเรียก _nextCharacter(); ที่นี่แล้ว เพราะมันถูกเรียกใน uploadImageToFirebase() อยู่แล้ว
                   },
                   child: Text('บันทึกไป Firebase'),
                 ),
