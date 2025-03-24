@@ -80,8 +80,12 @@ class HomePage extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EvaluationPage(
-                                      character: 'ก'), // ✅ ส่งค่าถูกต้องแล้ว
+                                  builder: (context) => EvaluationPage(
+                                    language:
+                                        'English', // หรือ 'Thai' ตามที่ผู้ใช้เลือก
+                                    character:
+                                        'A', // หรืออักษรที่ต้องการประเมิน
+                                  ),
                                 ),
                               );
                             },

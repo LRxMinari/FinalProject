@@ -119,11 +119,17 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
   Future<void> uploadImageToFirebase(GlobalKey repaintKey) async {
     try {
-      // ✅ ดึง UID ของผู้ใช้ที่ล็อกอิน
       String uid = getCurrentUserUID();
-
-      // ✅ ดึงภาษาที่ผู้ใช้กำลังฝึก
       String languageFolder = widget.language == "English" ? "English" : "Thai";
+
+      if (_charactersToPractice.isEmpty || _currentCharacterIndex < 0) {
+        print("❌ ไม่มีตัวอักษรให้บันทึก");
+        return;
+      }
+
+      // ✅ ใช้ตัวอักษรปัจจุบันเป็นชื่อไฟล์ เช่น writing_A.png หรือ writing_ก.png
+      String character = _charactersToPractice[_currentCharacterIndex];
+      String fileName = "writing_$character.png";
 
       RenderRepaintBoundary? boundary = repaintKey.currentContext
           ?.findRenderObject() as RenderRepaintBoundary?;
@@ -140,9 +146,10 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       if (byteData != null) {
         Uint8List pngBytes = byteData.buffer.asUint8List();
 
-        // ✅ บันทึกลงโฟลเดอร์ของผู้ใช้ และแยกตามภาษา
-        Reference ref = FirebaseStorage.instance.ref().child(
-            "user_writings/$uid/$languageFolder/writing_${DateTime.now().millisecondsSinceEpoch}.png");
+        // ✅ เปลี่ยนชื่อไฟล์ให้มีตัวอักษรที่ฝึกเขียน
+        Reference ref = FirebaseStorage.instance
+            .ref()
+            .child("user_writings/$uid/$languageFolder/$fileName");
 
         UploadTask uploadTask = ref.putData(pngBytes);
         TaskSnapshot snapshot = await uploadTask;
@@ -221,8 +228,11 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        EvaluationPage(character: 'ก'), // เริ่มที่ "ก" เสมอ
+                    builder: (context) => EvaluationPage(
+                      language: widget.language, // ✅ ใช้ค่าภาษาที่ส่งมา
+                      character: _charactersToPractice[
+                          _currentCharacterIndex], // ✅ ใช้ตัวอักษรปัจจุบัน
+                    ),
                   ),
                 );
               },
