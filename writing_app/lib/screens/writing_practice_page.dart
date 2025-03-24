@@ -112,14 +112,22 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
   GlobalKey repaintKey = GlobalKey();
 
-  String getCurrentUserUID() {
-    final user = FirebaseAuth.instance.currentUser;
-    return user?.uid ?? "unknown_user"; // ถ้าไม่มี user ให้ใช้ "unknown_user"
+  Future<String?> getCurrentUserUID() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print("❌ ไม่มีผู้ใช้ล็อกอิน กำลังล็อกอินแบบ Anonymous...");
+      user = (await FirebaseAuth.instance.signInAnonymously()).user;
+    }
+    return user?.uid;
   }
 
   Future<void> uploadImageToFirebase(GlobalKey repaintKey) async {
     try {
-      String uid = getCurrentUserUID();
+      String? uid = await getCurrentUserUID();
+      if (uid == null) {
+        print("❌ ล็อกอินไม่สำเร็จ ไม่สามารถอัปโหลดไฟล์ได้");
+        return;
+      }
       String languageFolder = widget.language == "English" ? "English" : "Thai";
 
       if (_charactersToPractice.isEmpty || _currentCharacterIndex < 0) {

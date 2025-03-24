@@ -81,10 +81,8 @@ class HomePage extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => EvaluationPage(
-                                    language:
-                                        'English', // หรือ 'Thai' ตามที่ผู้ใช้เลือก
-                                    character:
-                                        'A', // หรืออักษรที่ต้องการประเมิน
+                                    language: "Thai",
+                                    character: "ก",
                                   ),
                                 ),
                               );

@@ -5,13 +5,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'home_page.dart';
 
 class EvaluationPage extends StatefulWidget {
-  final String language; // ภาษา (Thai / English)
-  final String character; // เพิ่มตัวแปร character
+  final String language;
+  final String character;
 
   const EvaluationPage({
     super.key,
     required this.language,
-    required this.character, // ใส่ this.character ตรงนี้
+    required this.character,
   });
 
   @override
@@ -19,77 +19,29 @@ class EvaluationPage extends StatefulWidget {
 }
 
 class _EvaluationPageState extends State<EvaluationPage> {
-  String? _downloadUrl; // เก็บ URL ของรูปที่ดึงมาได้
-  bool _isLoading = false; // ใช้แสดงสถานะโหลดข้อมูล
-  String _selectedCharacter = ''; // ตัวอักษรที่ถูกเลือก
-
-  late List<String> _characters; // รายชื่อตัวอักษรของแต่ละภาษา
+  String? _downloadUrl;
+  bool _isLoading = false;
+  String _selectedCharacter = '';
+  String selectedLanguage = "Thai"; // ✅ กำหนดค่าเริ่มต้นให้ selectedLanguage
+  late List<String> _characters;
 
   @override
   void initState() {
     super.initState();
-    _characters = widget.language == 'English'
-        ? List.generate(26, (index) => String.fromCharCode(65 + index)) // A-Z
-        : [
-            'ก',
-            'ข',
-            'ฃ',
-            'ค',
-            'ฅ',
-            'ฆ',
-            'ง',
-            'จ',
-            'ฉ',
-            'ช',
-            'ซ',
-            'ฌ',
-            'ญ',
-            'ฎ',
-            'ฏ',
-            'ฐ',
-            'ฑ',
-            'ฒ',
-            'ณ',
-            'ด',
-            'ต',
-            'ถ',
-            'ท',
-            'ธ',
-            'น',
-            'บ',
-            'ป',
-            'ผ',
-            'ฝ',
-            'พ',
-            'ฟ',
-            'ภ',
-            'ม',
-            'ย',
-            'ร',
-            'ล',
-            'ว',
-            'ศ',
-            'ษ',
-            'ส',
-            'ห',
-            'ฬ',
-            'อ',
-            'ฮ'
-          ]; // ตัวอักษรไทย
+    _characters =
+        selectedLanguage == 'English' ? englishCharacters : thaiCharacters;
 
     if (_characters.isNotEmpty) {
-      _selectedCharacter = _characters.first; // เริ่มที่ตัวแรก
+      _selectedCharacter = _characters.first;
       _fetchImage(_selectedCharacter);
     }
   }
 
-  // ✅ ดึง UID ของผู้ใช้
   String getCurrentUserUID() {
     final user = FirebaseAuth.instance.currentUser;
     return user?.uid ?? "unknown_user";
   }
 
-  // ✅ ดึง URL ของรูปจาก Firebase Storage
   Future<void> _fetchImage(String character) async {
     setState(() {
       _isLoading = true;
@@ -98,11 +50,12 @@ class _EvaluationPageState extends State<EvaluationPage> {
 
     try {
       String uid = getCurrentUserUID();
-      String languageFolder = widget.language == "English" ? "English" : "Thai";
+      String languageFolder =
+          selectedLanguage == "English" ? "English" : "Thai";
       String filePath =
           "user_writings/$uid/$languageFolder/writing_$character.png";
 
-      print("📢 Fetching image from: $filePath");
+      print("Fetching image from: $filePath");
 
       String downloadUrl =
           await FirebaseStorage.instance.ref(filePath).getDownloadURL();
@@ -111,7 +64,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
         _downloadUrl = downloadUrl;
       });
 
-      print("✅ Image URL: $downloadUrl");
+      print("Image URL: $downloadUrl");
     } catch (e) {
       print("❌ Error fetching image: $e");
     } finally {
@@ -124,73 +77,254 @@ class _EvaluationPageState extends State<EvaluationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("ประเมินตัวอักษร (${widget.language})")),
-      body: Column(
-        children: [
-          const SizedBox(height: 10),
-          // ✅ แสดงปุ่มเลือกตัวอักษร
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: _characters.map((char) {
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCharacter = char;
-                    });
-                    _fetchImage(char);
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 5),
-                    padding: const EdgeInsets.all(10),
+      appBar: AppBar(
+        title: const Text("การประเมินผล"),
+        backgroundColor: Colors.purple[100],
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      HomePage()), // 🔥 เปลี่ยน HomePage เป็นหน้าหลักของคุณ
+              (Route<dynamic> route) => false, // ❌ ลบทุกหน้าเก่าทิ้ง
+            );
+          },
+        ),
+      ),
+      backgroundColor: Colors.purple[50],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // กล่องแสดงผลตัวอักษร
+            Expanded(
+              flex: 2,
+              child: Column(
+                children: [
+                  Container(
+                    height: 300,
                     decoration: BoxDecoration(
-                      color: _selectedCharacter == char
-                          ? Colors.blue
-                          : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.purple[200],
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      char,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: _selectedCharacter == char
-                            ? Colors.white
-                            : Colors.black,
-                      ),
+                    child: Center(
+                      child: _isLoading
+                          ? const CircularProgressIndicator()
+                          : _downloadUrl != null
+                              ? Image.network(
+                                  _downloadUrl!,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Text(
+                                      "❌ ไม่พบรูปภาพ",
+                                      style: TextStyle(
+                                          fontSize: 20, color: Colors.white),
+                                    );
+                                  },
+                                )
+                              : const Text(
+                                  "❌ ไม่พบรูปภาพ",
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white),
+                                ),
                     ),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "86.0% ★★★☆☆",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "ลองฝึกการเขียนให้สมบูรณ์มากขึ้น",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // ตารางตัวอักษร (ฝั่งขวา)
+            Expanded(
+              flex: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // ✅ ปุ่มเปลี่ยนภาษา
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildLanguageTab(
+                          "Thai", "ภาษาไทย", selectedLanguage == "Thai"),
+                      _buildLanguageTab("English", "ภาษาอังกฤษ",
+                          selectedLanguage == "English"),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // ตารางตัวอักษร
+                  Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(8),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        childAspectRatio: 1.2,
+                        crossAxisSpacing: 6,
+                        mainAxisSpacing: 6,
+                      ),
+                      itemCount: selectedLanguage == "Thai"
+                          ? thaiCharacters.length
+                          : englishCharacters.length,
+                      itemBuilder: (context, index) {
+                        String char = selectedLanguage == "Thai"
+                            ? thaiCharacters[index]
+                            : englishCharacters[index];
+                        return _buildCharacterTile(char);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ✅ ฟังก์ชันสร้างปุ่มเปลี่ยนภาษา
+  Widget _buildLanguageTab(String langCode, String text, bool isSelected) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            selectedLanguage = langCode;
+            _characters =
+                selectedLanguage == "Thai" ? thaiCharacters : englishCharacters;
+            _selectedCharacter = _characters.first;
+            _fetchImage(_selectedCharacter);
+          });
+          print("✅ Selected language: $selectedLanguage");
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSelected ? Colors.purple : Colors.grey[300],
+          foregroundColor: isSelected ? Colors.white : Colors.black,
+        ),
+        child: Text(text),
+      ),
+    );
+  }
+
+  // ✅ ปุ่มเลือกตัวอักษร
+  Widget _buildCharacterTile(String char) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedCharacter = char;
+        });
+        _fetchImage(char);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: _selectedCharacter == char ? Colors.purple : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey),
+        ),
+        child: Center(
+          child: Text(
+            char,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: _selectedCharacter == char ? Colors.white : Colors.black,
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          // ✅ แสดงผลรูปภาพที่โหลดมา
-          Expanded(
-            child: Center(
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : _downloadUrl != null
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "รูปที่คุณเขียน: $_selectedCharacter",
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 10),
-                            Image.network(_downloadUrl!,
-                                width: 300, height: 300, fit: BoxFit.contain),
-                          ],
-                        )
-                      : const Text("❌ ไม่พบรูปที่คุณเขียน",
-                          style: TextStyle(color: Colors.red)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
+
+// ✅ ตัวอักษรภาษาไทย
+List<String> thaiCharacters = [
+  "ก",
+  "ข",
+  "ฃ",
+  "ค",
+  "ฅ",
+  "ฆ",
+  "ง",
+  "จ",
+  "ฉ",
+  "ช",
+  "ซ",
+  "ญ",
+  "ฎ",
+  "ฏ",
+  "ฐ",
+  "ฑ",
+  "ฒ",
+  "ณ",
+  "ด",
+  "ต",
+  "ถ",
+  "ท",
+  "ธ",
+  "น",
+  "บ",
+  "ป",
+  "ผ",
+  "ฝ",
+  "พ",
+  "ฟ",
+  "ภ",
+  "ม",
+  "ย",
+  "ร",
+  "ล",
+  "ว",
+  "ศ",
+  "ษ",
+  "ส",
+  "ห",
+  "ฬ",
+  "อ",
+  "ฮ"
+];
+
+// ✅ ตัวอักษรภาษาอังกฤษ
+List<String> englishCharacters = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z"
+];
