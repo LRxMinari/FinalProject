@@ -8,6 +8,9 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:typed_data';
 
 class WritingPracticePage extends StatefulWidget {
   final String language;
@@ -135,7 +138,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         return;
       }
 
-      // ✅ ใช้ตัวอักษรปัจจุบันเป็นชื่อไฟล์ เช่น writing_A.png หรือ writing_ก.png
       String character = _charactersToPractice[_currentCharacterIndex];
       String fileName = "writing_$character.png";
 
@@ -154,7 +156,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       if (byteData != null) {
         Uint8List pngBytes = byteData.buffer.asUint8List();
 
-        // ✅ เปลี่ยนชื่อไฟล์ให้มีตัวอักษรที่ฝึกเขียน
         Reference ref = FirebaseStorage.instance
             .ref()
             .child("user_writings/$uid/$languageFolder/$fileName");
@@ -165,13 +166,50 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
         print("✅ รูปถูกอัปโหลดที่: $downloadUrl");
 
-        // ✅ ไปยังตัวอักษรถัดไป
-        _nextCharacter();
+        // ✅ เรียก Cloud Function (Python) เพื่อประเมินผล
+        await evaluateWriting(uid, languageFolder, fileName, downloadUrl);
+
+        // ✅ ไปยังหน้าประเมินผลหลังจากอัปโหลดและประเมินเสร็จ
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EvaluationPage(
+              language: widget.language,
+              character: character,
+            ),
+          ),
+        );
       } else {
         print("❌ ไม่สามารถสร้าง ByteData จากภาพ");
       }
     } catch (e) {
       print("❌ เกิดข้อผิดพลาด: $e");
+    }
+  }
+
+  Future<void> evaluateWriting(String uid, String languageFolder,
+      String fileName, String imageUrl) async {
+    try {
+      String apiUrl = "https://your-cloud-function-url/evaluate";
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "uid": uid,
+          "language": languageFolder,
+          "fileName": fileName,
+          "imageUrl": imageUrl // ✅ ส่งลิงก์ภาพให้ Cloud Function
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ ประเมินผลสำเร็จ: ${response.body}");
+      } else {
+        print("❌ เกิดข้อผิดพลาดขณะประเมินผล: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ ไม่สามารถส่งคำขอไปยัง Cloud Function: $e");
     }
   }
 

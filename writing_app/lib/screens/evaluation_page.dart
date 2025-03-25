@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'home_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EvaluationPage extends StatefulWidget {
   final String language;
@@ -22,8 +23,10 @@ class _EvaluationPageState extends State<EvaluationPage> {
   String? _downloadUrl;
   bool _isLoading = false;
   String _selectedCharacter = '';
-  String selectedLanguage = "Thai"; // ✅ กำหนดค่าเริ่มต้นให้ selectedLanguage
+  String selectedLanguage = "Thai";
   late List<String> _characters;
+
+  double? _score = 0.0; // ✅ กำหนดค่าเริ่มต้นให้ _score เพื่อป้องกัน Error
 
   @override
   void initState() {
@@ -34,6 +37,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
     if (_characters.isNotEmpty) {
       _selectedCharacter = _characters.first;
       _fetchImage(_selectedCharacter);
+      _fetchScore(_selectedCharacter); // ✅ ดึงคะแนนของตัวอักษรที่เลือก
     }
   }
 
@@ -67,6 +71,41 @@ class _EvaluationPageState extends State<EvaluationPage> {
       print("Image URL: $downloadUrl");
     } catch (e) {
       print("❌ Error fetching image: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchScore(String character) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      String uid = getCurrentUserUID();
+      String languageFolder =
+          selectedLanguage == "English" ? "English" : "Thai";
+
+      DocumentSnapshot scoreDoc = await FirebaseFirestore.instance
+          .collection("evaluations")
+          .doc(uid)
+          .collection(languageFolder)
+          .doc(character)
+          .get();
+
+      if (scoreDoc.exists) {
+        setState(() {
+          _score = scoreDoc["score"].toDouble(); // ดึงคะแนนจาก Firestore
+        });
+      } else {
+        setState(() {
+          _score = 0; // ถ้าไม่มีคะแนนให้เป็น 0
+        });
+      }
+    } catch (e) {
+      print("❌ Error fetching score: $e");
     } finally {
       setState(() {
         _isLoading = false;
@@ -134,9 +173,14 @@ class _EvaluationPageState extends State<EvaluationPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "86.0% ★★★☆☆",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  Text(
+                    _score != null
+                        ? "${_score!.toStringAsFixed(2)}% ★★★☆☆"
+                        : "กำลังโหลดคะแนน...",
+                    style: TextStyle(
+                        // ❌ ลบ `const` ออก
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -230,6 +274,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
           _selectedCharacter = char;
         });
         _fetchImage(char);
+        _fetchScore(char); // ✅ ดึงคะแนนของตัวอักษรที่เลือก
       },
       child: Container(
         decoration: BoxDecoration(
