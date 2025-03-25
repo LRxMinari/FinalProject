@@ -49,7 +49,7 @@ def evaluate_writing():
 
         # ✅ ดึงภาพต้นแบบจาก Firebase Storage
         template_path = f"user_writings/templates/{language}/{file_name}"  
-        bucket = gcs_client.bucket("your-firebase-storage-bucket")  # 🔹 ใส่ชื่อ Bucket ของคุณ
+        bucket = gcs_client.bucket("practice-writing-app-c6bd8.firebasestorage.app")  # 🔹 ใส่ชื่อ Bucket ของคุณ
         blob = bucket.blob(template_path)
         
         if not blob.exists():

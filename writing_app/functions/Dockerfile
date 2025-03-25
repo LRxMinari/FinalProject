@@ -7,14 +7,14 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Install any needed packages
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Set the environment variable for Flask
 ENV PORT 8080
 
-# Expose the port that Flask runs on
+# Expose the port Flask will run on
 EXPOSE 8080
 
-# Run the application
-CMD ["python", "main.py"]
+# Use gunicorn instead of running Flask directly
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "main:app"]
