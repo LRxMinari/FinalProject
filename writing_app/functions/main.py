@@ -1,3 +1,4 @@
+from flask import Flask, request, jsonify
 import functions_framework
 import cv2
 import numpy as np
@@ -6,6 +7,7 @@ import firebase_admin
 from firebase_admin import storage, firestore
 from google.cloud import storage as gcs_storage
 from skimage.metrics import structural_similarity as ssim
+import os
 
 # ✅ เริ่ม Firebase Admin SDK
 firebase_admin.initialize_app()
@@ -13,12 +15,18 @@ firebase_admin.initialize_app()
 db = firestore.client()
 gcs_client = gcs_storage.Client()
 
-@functions_framework.http
-def evaluate_writing(request):
+app = Flask(__name__)
+
+@app.route('/', methods=['GET'])
+def home():
+    return "✅ Writing App is running!", 200
+
+@app.route('/evaluate', methods=['POST'])
+def evaluate_writing():
     request_json = request.get_json()
 
     if not request_json:
-        return "❌ ไม่มีข้อมูล", 400
+        return jsonify({"error": "❌ ไม่มีข้อมูล"}), 400
 
     try:
         uid = request_json["uid"]
@@ -31,13 +39,13 @@ def evaluate_writing(request):
         # ✅ ดาวน์โหลดภาพที่ผู้ใช้วาดจาก Firebase Storage
         response = requests.get(image_url)
         if response.status_code != 200:
-            return "❌ ดาวน์โหลดภาพไม่สำเร็จ", 500
+            return jsonify({"error": "❌ ดาวน์โหลดภาพไม่สำเร็จ"}), 500
         
         image_array = np.asarray(bytearray(response.content), dtype=np.uint8)
         user_img = cv2.imdecode(image_array, cv2.IMREAD_GRAYSCALE)
 
         if user_img is None:
-            return "❌ ไม่สามารถโหลดภาพของผู้ใช้", 500
+            return jsonify({"error": "❌ ไม่สามารถโหลดภาพของผู้ใช้"}), 500
 
         # ✅ ดึงภาพต้นแบบจาก Firebase Storage
         template_path = f"user_writings/templates/{language}/{file_name}"  
@@ -45,14 +53,14 @@ def evaluate_writing(request):
         blob = bucket.blob(template_path)
         
         if not blob.exists():
-            return {"error": "❌ ไม่พบภาพต้นแบบ"}, 400
+            return jsonify({"error": "❌ ไม่พบภาพต้นแบบ"}), 400
 
         template_bytes = blob.download_as_bytes()
         template_array = np.asarray(bytearray(template_bytes), dtype=np.uint8)
         template_img = cv2.imdecode(template_array, cv2.IMREAD_GRAYSCALE)
 
         if template_img is None:
-            return "❌ ไม่สามารถโหลดภาพต้นแบบ", 500
+            return jsonify({"error": "❌ ไม่สามารถโหลดภาพต้นแบบ"}), 500
 
         # ✅ ปรับขนาดภาพของผู้ใช้ให้ตรงกับภาพต้นแบบ
         user_img = cv2.resize(user_img, (template_img.shape[1], template_img.shape[0]))
@@ -83,8 +91,12 @@ def evaluate_writing(request):
             "status": "completed",
         }, merge=True)
 
-        return {"status": "success", "fill_accuracy": fill_accuracy, "ssim_score": ssim_percentage}, 200
+        return jsonify({"status": "success", "fill_accuracy": fill_accuracy, "ssim_score": ssim_percentage}), 200
 
     except Exception as e:
         print(f"❌ เกิดข้อผิดพลาด: {e}")
-        return {"status": "error", "message": str(e)}, 500
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port, debug=True)
