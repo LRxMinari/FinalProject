@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'home_page.dart';
@@ -10,10 +9,10 @@ class EvaluationPage extends StatefulWidget {
   final String character;
 
   const EvaluationPage({
-    super.key,
+    Key? key,
     required this.language,
     required this.character,
-  });
+  }) : super(key: key);
 
   @override
   _EvaluationPageState createState() => _EvaluationPageState();
@@ -26,18 +25,20 @@ class _EvaluationPageState extends State<EvaluationPage> {
   String selectedLanguage = "Thai";
   late List<String> _characters;
 
-  double? _score = 0.0; // ✅ กำหนดค่าเริ่มต้นให้ _score เพื่อป้องกัน Error
+  double _score = 0.0; // กำหนดค่าเริ่มต้นให้ _score
 
   @override
   void initState() {
     super.initState();
+    // กำหนดตารางตัวอักษรตามภาษา (ค่า default)
     _characters =
         selectedLanguage == 'English' ? englishCharacters : thaiCharacters;
 
+    // เมื่อเริ่มต้น ให้ใช้ตัวอักษรแรกของตารางเป็นตัวที่เลือก
     if (_characters.isNotEmpty) {
       _selectedCharacter = _characters.first;
       _fetchImage(_selectedCharacter);
-      _fetchScore(_selectedCharacter); // ✅ ดึงคะแนนของตัวอักษรที่เลือก
+      _fetchScore(_selectedCharacter);
     }
   }
 
@@ -46,6 +47,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
     return user?.uid ?? "unknown_user";
   }
 
+  // ดึง URL รูปจาก Firebase Storage ตามตัวอักษรที่เลือก
   Future<void> _fetchImage(String character) async {
     setState(() {
       _isLoading = true;
@@ -56,6 +58,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
       String uid = getCurrentUserUID();
       String languageFolder =
           selectedLanguage == "English" ? "English" : "Thai";
+      // ใช้ parameter character ที่ส่งเข้ามา
       String filePath =
           "user_writings/$uid/$languageFolder/writing_$character.png";
 
@@ -78,6 +81,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
     }
   }
 
+  // ดึงคะแนนจาก Firestore ตามตัวอักษรที่เลือก
   Future<void> _fetchScore(String character) async {
     setState(() {
       _isLoading = true;
@@ -97,11 +101,11 @@ class _EvaluationPageState extends State<EvaluationPage> {
 
       if (scoreDoc.exists) {
         setState(() {
-          _score = scoreDoc["score"].toDouble(); // ดึงคะแนนจาก Firestore
+          _score = (scoreDoc["score"] as num).toDouble();
         });
       } else {
         setState(() {
-          _score = 0; // ถ้าไม่มีคะแนนให้เป็น 0
+          _score = 0.0;
         });
       }
     } catch (e) {
@@ -113,6 +117,14 @@ class _EvaluationPageState extends State<EvaluationPage> {
     }
   }
 
+  void _goHome() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+      (Route<dynamic> route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,15 +134,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      HomePage()), // 🔥 เปลี่ยน HomePage เป็นหน้าหลักของคุณ
-              (Route<dynamic> route) => false, // ❌ ลบทุกหน้าเก่าทิ้ง
-            );
-          },
+          onPressed: _goHome,
         ),
       ),
       backgroundColor: Colors.purple[50],
@@ -139,7 +143,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // กล่องแสดงผลตัวอักษร
+            // กล่องแสดงผลตัวอักษรและคะแนน
             Expanded(
               flex: 2,
               child: Column(
@@ -174,13 +178,9 @@ class _EvaluationPageState extends State<EvaluationPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _score != null
-                        ? "${_score!.toStringAsFixed(2)}% ★★★☆☆"
-                        : "กำลังโหลดคะแนน...",
-                    style: TextStyle(
-                        // ❌ ลบ `const` ออก
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold),
+                    "${_score.toStringAsFixed(2)}% ★★★☆☆",
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -193,13 +193,13 @@ class _EvaluationPageState extends State<EvaluationPage> {
 
             const SizedBox(width: 16),
 
-            // ตารางตัวอักษร (ฝั่งขวา)
+            // ตารางตัวอักษร (แถบด้านขวา) สำหรับเปลี่ยนภาษาและเลือกตัวอักษร
             Expanded(
               flex: 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // ✅ ปุ่มเปลี่ยนภาษา
+                  // ปุ่มเปลี่ยนภาษา
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -210,8 +210,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-
-                  // ตารางตัวอักษร
+                  // ตารางแสดงตัวอักษร
                   Expanded(
                     child: GridView.builder(
                       padding: const EdgeInsets.all(8),
@@ -242,7 +241,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
     );
   }
 
-  // ✅ ฟังก์ชันสร้างปุ่มเปลี่ยนภาษา
+  // ฟังก์ชันสร้างปุ่มเปลี่ยนภาษา
   Widget _buildLanguageTab(String langCode, String text, bool isSelected) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -252,8 +251,10 @@ class _EvaluationPageState extends State<EvaluationPage> {
             selectedLanguage = langCode;
             _characters =
                 selectedLanguage == "Thai" ? thaiCharacters : englishCharacters;
+            // เมื่อเปลี่ยนภาษา ให้ใช้ตัวอักษรแรกของตาราง
             _selectedCharacter = _characters.first;
             _fetchImage(_selectedCharacter);
+            _fetchScore(_selectedCharacter);
           });
           print("✅ Selected language: $selectedLanguage");
         },
@@ -266,15 +267,15 @@ class _EvaluationPageState extends State<EvaluationPage> {
     );
   }
 
-  // ✅ ปุ่มเลือกตัวอักษร
+  // ฟังก์ชันสร้าง tile สำหรับเลือกตัวอักษร
   Widget _buildCharacterTile(String char) {
     return GestureDetector(
       onTap: () {
         setState(() {
           _selectedCharacter = char;
+          _fetchImage(char);
+          _fetchScore(char);
         });
-        _fetchImage(char);
-        _fetchScore(char); // ✅ ดึงคะแนนของตัวอักษรที่เลือก
       },
       child: Container(
         decoration: BoxDecoration(
@@ -297,7 +298,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
   }
 }
 
-// ✅ ตัวอักษรภาษาไทย
+// ตัวอักษรภาษาไทย
 List<String> thaiCharacters = [
   "ก",
   "ข",
@@ -344,7 +345,7 @@ List<String> thaiCharacters = [
   "ฮ"
 ];
 
-// ✅ ตัวอักษรภาษาอังกฤษ
+// ตัวอักษรภาษาอังกฤษ
 List<String> englishCharacters = [
   "A",
   "B",
