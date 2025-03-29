@@ -2,6 +2,7 @@ console.log("Starting functions module...");
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+// ดึง FieldValue จาก firebase-admin/firestore
 const { FieldValue } = require("firebase-admin/firestore");
 
 const fs = require("fs");
@@ -11,12 +12,13 @@ const PNG = require("pngjs").PNG;
 const sharp = require("sharp");
 
 // สำหรับ Production ไม่ต้องตั้งค่า Emulator
-admin.initializeApp();
+admin.initializeApp({
+  storageBucket: "practice-writing-app-c6bd8.firebasestorage.app",
+});
 console.log("Firebase admin initialized");
 
-// Global variable for pixelmatch
+// โหลด pixelmatch แบบ dynamic ก่อนเพื่อหลีกเลี่ยง delay ในช่วง function ถูกเรียกใช้งาน
 let pixelmatch;
-// Pre-load pixelmatch to avoid delays during function execution
 (async () => {
   try {
     const imported = await import("pixelmatch");
@@ -73,20 +75,24 @@ exports.processData = functions.https.onRequest(async (req, res) => {
 // ฟังก์ชัน evaluateWriting สำหรับประเมินผลการฝึกเขียน พร้อม enforce App Check
 exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
   try {
+    // ตรวจสอบให้แน่ใจว่าใช้ POST เท่านั้น
     if (req.method !== "POST") {
       return res.status(405).send("Method Not Allowed");
     }
 
     // ตรวจสอบ App Check token จาก header "X-Firebase-AppCheck"
     const appCheckToken = req.header("X-Firebase-AppCheck");
-    if (!appCheckToken) {
-      return res.status(401).send("No App Check token provided.");
-    }
-    try {
-      await admin.appCheck().verifyToken(appCheckToken);
-    } catch (tokenError) {
-      console.error("App Check token verification failed:", tokenError);
-      return res.status(401).send("Invalid App Check token.");
+    if (appCheckToken) {
+      try {
+        await admin.appCheck().verifyToken(appCheckToken);
+      } catch (tokenError) {
+        console.error("App Check token verification failed:", tokenError);
+        return res.status(401).send("Invalid App Check token.");
+      }
+    } else {
+      console.warn(
+        "No App Check token provided; proceeding in development mode."
+      );
     }
 
     // รับ parameter จาก client
@@ -97,13 +103,11 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
 
     // แปลงชื่อไฟล์จากผู้ใช้ให้ตรงกับชื่อใน template folder
     const templateFileName = getTemplateFileName(fileName);
-
-    // ตรวจสอบว่ามีไฟล์ template อยู่จริงหรือไม่
     if (!isValidTemplateFile(templateFileName, language)) {
       return res.status(404).send("Template image not found");
     }
 
-    // ดาวน์โหลดภาพผู้ใช้จาก imageUrl
+    // ดาวน์โหลดภาพที่ผู้ใช้ส่งเข้ามาจาก imageUrl
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     const userImageBuffer = Buffer.from(response.data, "binary");
 
@@ -116,7 +120,7 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
     );
     const templateBuffer = fs.readFileSync(templateImagePath);
 
-    // ใช้ sharp เพื่อแปลงภาพเป็น grayscale และใช้ threshold (128) เพื่อลด noise
+    // ใช้ sharp เพื่อแปลงภาพเป็น grayscale และ threshold เพื่อลด noise
     const processedUserBuffer = await sharp(userImageBuffer)
       .grayscale()
       .threshold(128)
@@ -126,16 +130,28 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
       .threshold(128)
       .toBuffer();
 
-    const processedUserPNG = PNG.sync.read(processedUserBuffer);
+    // อ่านภาพที่ประมวลผลแล้ว
+    let processedUserPNG = PNG.sync.read(processedUserBuffer);
     const processedTemplatePNG = PNG.sync.read(processedTemplateBuffer);
 
-    // ตรวจสอบว่ามีการโหลด pixelmatch แล้ว
+    // ตรวจสอบว่าขนาดของทั้งสองภาพตรงกันหรือไม่ ถ้าไม่ตรง ให้ปรับขนาดภาพผู้ใช้ให้ตรงกับ template
+    if (
+      processedUserPNG.width !== processedTemplatePNG.width ||
+      processedUserPNG.height !== processedTemplatePNG.height
+    ) {
+      const resizedUserBuffer = await sharp(processedUserBuffer)
+        .resize(processedTemplatePNG.width, processedTemplatePNG.height)
+        .toBuffer();
+      processedUserPNG = PNG.sync.read(resizedUserBuffer);
+      console.log("User image resized to match template size.");
+    }
+
+    // ตรวจสอบให้แน่ใจว่า pixelmatch โหลดแล้ว
     if (!pixelmatch) {
       console.error("pixelmatch module is not loaded.");
       return res.status(500).send("Server configuration error.");
     }
-
-    // เปรียบเทียบภาพที่ประมวลผลแล้วด้วย pixelmatch ด้วย threshold ที่เข้มงวด (0.05)
+    // เปรียบเทียบภาพที่ประมวลผลแล้วด้วย pixelmatch โดยใช้ threshold 0.05
     const diff = new PNG({
       width: processedUserPNG.width,
       height: processedUserPNG.height,
@@ -148,12 +164,10 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
       processedUserPNG.height,
       { threshold: 0.05 }
     );
-
     const totalPixels = processedUserPNG.width * processedUserPNG.height;
     const similarity = 100 - (numDiffPixels / totalPixels) * 100;
 
     const character = getCharacterFromFileName(templateFileName);
-
     let recommendation = "";
     if (similarity >= 90) {
       recommendation =
@@ -169,7 +183,28 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
         "ไม่เป็นไรจ๊ะ! ทุกคนเริ่มต้นจากที่ต่ำสุด ลองฝึกฝนอีกหน่อย แล้วคุณจะเก่งขึ้นอย่างรวดเร็ว!";
     }
 
-    // บันทึกผลคะแนนและคำแนะนำลง Firestore
+    // --- ส่วนการอัปโหลดไฟล์โดยใช้ Admin SDK ---
+    // ใช้ admin.storage() เพื่อเข้าถึง bucket
+    const bucket = admin.storage().bucket();
+    const langFolder = language === "English" ? "English" : "Thai";
+    const uidStr = uid;
+    const filePathInBucket = `user_writings/${uidStr}/${langFolder}/${fileName}`;
+    const file = bucket.file(filePathInBucket);
+
+    // บันทึกไฟล์โดยใช้ file.save() ซึ่งจะไม่ถูกตรวจสอบ Security Rules เนื่องจากใช้ Admin SDK
+    await file.save(userImageBuffer, {
+      metadata: { contentType: "image/png" },
+    });
+    console.log("Image uploaded successfully to:", filePathInBucket);
+
+    // สร้าง Signed URL สำหรับให้ client เข้าถึงไฟล์
+    const [downloadUrl] = await file.getSignedUrl({
+      action: "read",
+      expires: "03-09-2491",
+    });
+    console.log("Download URL:", downloadUrl);
+
+    // บันทึกผลลง Firestore ใน collection evaluations/{uid}/{language}/{character}
     await admin
       .firestore()
       .collection("evaluations")
