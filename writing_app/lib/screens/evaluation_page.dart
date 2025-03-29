@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'home_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'login_page.dart';
 
 class EvaluationPage extends StatefulWidget {
   final String language;
@@ -24,17 +25,37 @@ class _EvaluationPageState extends State<EvaluationPage> {
   String _selectedCharacter = '';
   String selectedLanguage = "Thai";
   late List<String> _characters;
-
   double _score = 0.0; // กำหนดค่าเริ่มต้นให้ _score
+
+  String? _uid; // เก็บ uid ของผู้ใช้ที่ล็อกอินแล้ว
 
   @override
   void initState() {
     super.initState();
+    _checkUserAndInitData();
+  }
+
+  Future<void> _checkUserAndInitData() async {
+    // ตรวจสอบว่ามีผู้ใช้ล็อกอินอยู่หรือไม่
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // หากไม่มีผู้ใช้ล็อกอิน ให้แสดง SnackBar แล้วนำผู้ใช้กลับไปที่หน้า LoginPage
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("กรุณาเข้าสู่ระบบก่อน")),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      });
+      return;
+    }
+    // หากมีผู้ใช้ล็อกอินแล้ว ให้เก็บ uid และเริ่มต้นดึงข้อมูล
+    _uid = user.uid;
     // กำหนดตารางตัวอักษรตามภาษา (ค่า default)
     _characters =
         selectedLanguage == 'English' ? englishCharacters : thaiCharacters;
-
-    // เมื่อเริ่มต้น ให้ใช้ตัวอักษรแรกของตารางเป็นตัวที่เลือก
     if (_characters.isNotEmpty) {
       _selectedCharacter = _characters.first;
       _fetchImage(_selectedCharacter);
@@ -42,35 +63,25 @@ class _EvaluationPageState extends State<EvaluationPage> {
     }
   }
 
-  String getCurrentUserUID() {
-    final user = FirebaseAuth.instance.currentUser;
-    return user?.uid ?? "unknown_user";
-  }
-
   // ดึง URL รูปจาก Firebase Storage ตามตัวอักษรที่เลือก
   Future<void> _fetchImage(String character) async {
+    if (_uid == null) return;
     setState(() {
       _isLoading = true;
       _downloadUrl = null;
     });
 
     try {
-      String uid = getCurrentUserUID();
       String languageFolder =
           selectedLanguage == "English" ? "English" : "Thai";
-      // ใช้ parameter character ที่ส่งเข้ามา
       String filePath =
-          "user_writings/$uid/$languageFolder/writing_$character.png";
-
+          "user_writings/$_uid/$languageFolder/writing_$character.png";
       print("Fetching image from: $filePath");
-
       String downloadUrl =
           await FirebaseStorage.instance.ref(filePath).getDownloadURL();
-
       setState(() {
         _downloadUrl = downloadUrl;
       });
-
       print("Image URL: $downloadUrl");
     } catch (e) {
       print("❌ Error fetching image: $e");
@@ -83,22 +94,20 @@ class _EvaluationPageState extends State<EvaluationPage> {
 
   // ดึงคะแนนจาก Firestore ตามตัวอักษรที่เลือก
   Future<void> _fetchScore(String character) async {
+    if (_uid == null) return;
     setState(() {
       _isLoading = true;
     });
 
     try {
-      String uid = getCurrentUserUID();
       String languageFolder =
           selectedLanguage == "English" ? "English" : "Thai";
-
       DocumentSnapshot scoreDoc = await FirebaseFirestore.instance
           .collection("evaluations")
-          .doc(uid)
+          .doc(_uid)
           .collection(languageFolder)
           .doc(character)
           .get();
-
       if (scoreDoc.exists) {
         setState(() {
           _score = (scoreDoc["score"] as num).toDouble();
@@ -190,16 +199,13 @@ class _EvaluationPageState extends State<EvaluationPage> {
                 ],
               ),
             ),
-
             const SizedBox(width: 16),
-
-            // ตารางตัวอักษร (แถบด้านขวา) สำหรับเปลี่ยนภาษาและเลือกตัวอักษร
+            // ตารางตัวอักษรสำหรับเปลี่ยนภาษาและเลือกตัวอักษร
             Expanded(
               flex: 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // ปุ่มเปลี่ยนภาษา
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -210,7 +216,6 @@ class _EvaluationPageState extends State<EvaluationPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // ตารางแสดงตัวอักษร
                   Expanded(
                     child: GridView.builder(
                       padding: const EdgeInsets.all(8),
@@ -251,7 +256,6 @@ class _EvaluationPageState extends State<EvaluationPage> {
             selectedLanguage = langCode;
             _characters =
                 selectedLanguage == "Thai" ? thaiCharacters : englishCharacters;
-            // เมื่อเปลี่ยนภาษา ให้ใช้ตัวอักษรแรกของตาราง
             _selectedCharacter = _characters.first;
             _fetchImage(_selectedCharacter);
             _fetchScore(_selectedCharacter);

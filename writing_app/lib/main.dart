@@ -19,14 +19,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // ตรวจสอบว่ากำลังรันบน Web หรือไม่
     if (kIsWeb) {
-      // สำหรับ Web: ใช้ FirebaseOptions ที่ระบุไว้
+      // สำหรับ Web: ใช้ Firebase.initializeApp() พร้อม FirebaseOptions
       await Firebase.initializeApp(options: firebaseOptions);
-      // หาก firebase_app_check เวอร์ชันที่ใช้ไม่รองรับ parameter เฉพาะสำหรับ Web ให้ activate แบบปกติ
+      // เรียกใช้ App Check
       await FirebaseAppCheck.instance.activate();
     } else {
-      // สำหรับ Android, iOS และ Desktop: ใช้ Firebase.initializeApp() แบบปกติ
+      // สำหรับ Android/iOS/Desktop: เรียก Firebase.initializeApp() แบบปกติ
       await Firebase.initializeApp();
+      // เรียกใช้ App Check
       await FirebaseAppCheck.instance.activate();
     }
 

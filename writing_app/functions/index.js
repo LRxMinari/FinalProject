@@ -1,21 +1,31 @@
 console.log("Starting functions module...");
 
 const functions = require("firebase-functions");
-console.log("Required firebase-functions and firebase-admin");
 const admin = require("firebase-admin");
-// ดึง FieldValue จาก firebase-admin/firestore
 const { FieldValue } = require("firebase-admin/firestore");
 
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const PNG = require("pngjs").PNG;
-// ไม่ require pixelmatch แบบ global เพราะเป็น ES Module
+const sharp = require("sharp");
 
-// สำหรับ Production ไม่ต้องตั้งค่า Firestore Emulator
-// admin.initializeApp() จะใช้ configuration จาก Firebase Console โดยอัตโนมัติ
+// สำหรับ Production ไม่ต้องตั้งค่า Emulator
 admin.initializeApp();
 console.log("Firebase admin initialized");
+
+// Global variable for pixelmatch
+let pixelmatch;
+// Pre-load pixelmatch to avoid delays during function execution
+(async () => {
+  try {
+    const imported = await import("pixelmatch");
+    pixelmatch = imported.default;
+    console.log("pixelmatch loaded successfully.");
+  } catch (error) {
+    console.error("Failed to load pixelmatch:", error);
+  }
+})();
 
 // ฟังก์ชันตรวจสอบว่าไฟล์ใน template มีอยู่จริงหรือไม่
 function isValidTemplateFile(fileName, language) {
@@ -60,15 +70,23 @@ exports.processData = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// ฟังก์ชัน evaluateWriting สำหรับประเมินผลการฝึกเขียน และให้คำแนะนำที่น่ารักสำหรับเด็ก
+// ฟังก์ชัน evaluateWriting สำหรับประเมินผลการฝึกเขียน พร้อม enforce App Check
 exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
   try {
-    // dynamic import โมดูล pixelmatch เมื่อฟังก์ชันถูกเรียกใช้งาน
-    const { default: pixelmatch } = await import("pixelmatch");
-
-    // ตรวจสอบให้แน่ใจว่าใช้ POST เท่านั้น
     if (req.method !== "POST") {
       return res.status(405).send("Method Not Allowed");
+    }
+
+    // ตรวจสอบ App Check token จาก header "X-Firebase-AppCheck"
+    const appCheckToken = req.header("X-Firebase-AppCheck");
+    if (!appCheckToken) {
+      return res.status(401).send("No App Check token provided.");
+    }
+    try {
+      await admin.appCheck().verifyToken(appCheckToken);
+    } catch (tokenError) {
+      console.error("App Check token verification failed:", tokenError);
+      return res.status(401).send("Invalid App Check token.");
     }
 
     // รับ parameter จาก client
@@ -85,14 +103,11 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
       return res.status(404).send("Template image not found");
     }
 
-    // ดาวน์โหลดภาพที่ผู้ใช้ส่งเข้ามาจาก imageUrl
+    // ดาวน์โหลดภาพผู้ใช้จาก imageUrl
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     const userImageBuffer = Buffer.from(response.data, "binary");
 
-    // อ่านภาพผู้ใช้จาก buffer ด้วย pngjs
-    let userPNG = PNG.sync.read(userImageBuffer);
-
-    // กำหนด path สำหรับ template image ในโฟลเดอร์ templates/{language}/
+    // อ่าน template image จากไฟล์ในโฟลเดอร์ templates/{language}/
     const templateImagePath = path.join(
       __dirname,
       "templates",
@@ -100,39 +115,45 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
       templateFileName
     );
     const templateBuffer = fs.readFileSync(templateImagePath);
-    const templatePNG = PNG.sync.read(templateBuffer);
 
-    // หากขนาดภาพไม่ตรงกัน ให้ปรับขนาดภาพผู้ใช้ให้ตรงกับ template ด้วย sharp
-    if (
-      userPNG.width !== templatePNG.width ||
-      userPNG.height !== templatePNG.height
-    ) {
-      const sharp = require("sharp");
-      const resizedBuffer = await sharp(userImageBuffer)
-        .resize(templatePNG.width, templatePNG.height)
-        .toBuffer();
-      userPNG = PNG.sync.read(resizedBuffer);
+    // ใช้ sharp เพื่อแปลงภาพเป็น grayscale และใช้ threshold (128) เพื่อลด noise
+    const processedUserBuffer = await sharp(userImageBuffer)
+      .grayscale()
+      .threshold(128)
+      .toBuffer();
+    const processedTemplateBuffer = await sharp(templateBuffer)
+      .grayscale()
+      .threshold(128)
+      .toBuffer();
+
+    const processedUserPNG = PNG.sync.read(processedUserBuffer);
+    const processedTemplatePNG = PNG.sync.read(processedTemplateBuffer);
+
+    // ตรวจสอบว่ามีการโหลด pixelmatch แล้ว
+    if (!pixelmatch) {
+      console.error("pixelmatch module is not loaded.");
+      return res.status(500).send("Server configuration error.");
     }
 
-    // เปรียบเทียบภาพโดยใช้ pixelmatch
-    const diff = new PNG({ width: userPNG.width, height: userPNG.height });
+    // เปรียบเทียบภาพที่ประมวลผลแล้วด้วย pixelmatch ด้วย threshold ที่เข้มงวด (0.05)
+    const diff = new PNG({
+      width: processedUserPNG.width,
+      height: processedUserPNG.height,
+    });
     const numDiffPixels = pixelmatch(
-      userPNG.data,
-      templatePNG.data,
+      processedUserPNG.data,
+      processedTemplatePNG.data,
       diff.data,
-      userPNG.width,
-      userPNG.height,
-      { threshold: 0.1 }
+      processedUserPNG.width,
+      processedUserPNG.height,
+      { threshold: 0.05 }
     );
 
-    // คำนวณคะแนนความคล้าย (เปอร์เซ็นต์)
-    const totalPixels = userPNG.width * userPNG.height;
+    const totalPixels = processedUserPNG.width * processedUserPNG.height;
     const similarity = 100 - (numDiffPixels / totalPixels) * 100;
 
-    // สกัดตัวอักษรจาก templateFileName
     const character = getCharacterFromFileName(templateFileName);
 
-    // กำหนดคำแนะนำสำหรับการเขียนให้เด็ก (มีความน่ารักและให้กำลังใจ)
     let recommendation = "";
     if (similarity >= 90) {
       recommendation =
@@ -148,7 +169,7 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
         "ไม่เป็นไรจ๊ะ! ทุกคนเริ่มต้นจากที่ต่ำสุด ลองฝึกฝนอีกหน่อย แล้วคุณจะเก่งขึ้นอย่างรวดเร็ว!";
     }
 
-    // บันทึกผลคะแนนและคำแนะนำลง Firestore ใน collection evaluations/{uid}/{language}/{character}
+    // บันทึกผลคะแนนและคำแนะนำลง Firestore
     await admin
       .firestore()
       .collection("evaluations")
@@ -161,7 +182,6 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
         recommendation: recommendation,
       });
 
-    // ส่งผลคะแนนและคำแนะนำกลับไปยัง client
     return res
       .status(200)
       .json({ score: similarity, recommendation: recommendation });
