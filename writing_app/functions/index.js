@@ -96,11 +96,11 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
     // ประมวลผลภาพ: แปลงเป็น grayscale และ threshold เพื่อลด noise
     const processedUserBuffer = await sharp(userImageBuffer)
       .grayscale()
-      .threshold(128)
+      .threshold(100)
       .toBuffer();
     const processedTemplateBuffer = await sharp(templateBuffer)
       .grayscale()
-      .threshold(128)
+      .threshold(100)
       .toBuffer();
 
     let processedUserPNG = PNG.sync.read(processedUserBuffer);
@@ -132,7 +132,7 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
       diff.data,
       processedUserPNG.width,
       processedUserPNG.height,
-      { threshold: 0.05 }
+      { threshold: 0.03 }
     );
     const totalPixels = processedUserPNG.width * processedUserPNG.height;
     const similarity = 100 - (numDiffPixels / totalPixels) * 100;
