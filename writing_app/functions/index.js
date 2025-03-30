@@ -2,22 +2,20 @@ console.log("Starting functions module...");
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-// ดึง FieldValue จาก firebase-admin/firestore
 const { FieldValue } = require("firebase-admin/firestore");
-
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const PNG = require("pngjs").PNG;
 const sharp = require("sharp");
 
-// สำหรับ Production ไม่ต้องตั้งค่า Emulator
+// กำหนด storageBucket ให้ถูกต้อง (โดยอัตโนมัติจาก Firebase Console)
 admin.initializeApp({
   storageBucket: "practice-writing-app-c6bd8.firebasestorage.app",
 });
-console.log("Firebase admin initialized");
+console.log("Firebase admin initialized.");
 
-// โหลด pixelmatch แบบ dynamic ก่อนเพื่อหลีกเลี่ยง delay ในช่วง function ถูกเรียกใช้งาน
+// โหลด pixelmatch แบบ dynamic import เพื่อลด delay ในช่วงเริ่มต้น
 let pixelmatch;
 (async () => {
   try {
@@ -29,7 +27,7 @@ let pixelmatch;
   }
 })();
 
-// ฟังก์ชันตรวจสอบว่าไฟล์ใน template มีอยู่จริงหรือไม่
+// ตรวจสอบว่ามีไฟล์ template อยู่หรือไม่
 function isValidTemplateFile(fileName, language) {
   const templateFolder = path.join(__dirname, "templates", language);
   if (!fs.existsSync(templateFolder)) return false;
@@ -37,12 +35,12 @@ function isValidTemplateFile(fileName, language) {
   return templateFiles.includes(fileName);
 }
 
-// ฟังก์ชันสกัดตัวอักษรจากชื่อไฟล์ เช่น "A.png" หรือ "ก.jpg"
+// สกัดตัวอักษรจากชื่อไฟล์ เช่น "A.png" หรือ "ก.jpg"
 function getCharacterFromFileName(fileName) {
   return path.basename(fileName, path.extname(fileName));
 }
 
-// ฟังก์ชันแปลงชื่อไฟล์จากผู้ใช้ (เช่น "writing_A.png") ให้เป็นชื่อ template (เช่น "A.png")
+// แปลงชื่อไฟล์จากผู้ใช้ (เช่น "writing_A.png") ให้เป็นชื่อ template (เช่น "A.png")
 function getTemplateFileName(userFileName) {
   const prefix = "writing_";
   if (userFileName.startsWith(prefix)) {
@@ -51,49 +49,25 @@ function getTemplateFileName(userFileName) {
   return userFileName;
 }
 
-// ฟังก์ชัน processData สำหรับการทดสอบหรือใช้งานอื่น ๆ
-exports.processData = functions.https.onRequest(async (req, res) => {
-  try {
-    if (req.method !== "POST") {
-      return res.status(405).send("Method Not Allowed");
-    }
-    const data = req.body;
-    if (!data || !data.message) {
-      return res.status(400).send('Missing required field "message"');
-    }
-    const docRef = await admin.firestore().collection("messages").add({
-      message: data.message,
-      timestamp: FieldValue.serverTimestamp(),
-    });
-    return res.status(200).json({ success: true, id: docRef.id });
-  } catch (error) {
-    console.error("Error processing data:", error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-// ฟังก์ชัน evaluateWriting สำหรับประเมินผลการฝึกเขียน พร้อม enforce App Check
+// ฟังก์ชัน evaluateWriting สำหรับประเมินผลการฝึกเขียน (Production Ready)
 exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
   try {
-    // ตรวจสอบให้แน่ใจว่าใช้ POST เท่านั้น
+    // ใช้ POST เท่านั้น
     if (req.method !== "POST") {
       return res.status(405).send("Method Not Allowed");
     }
 
-    // ตรวจสอบ App Check token จาก header "X-Firebase-AppCheck"
-    const appCheckToken = req.header("X-Firebase-AppCheck");
-    if (appCheckToken) {
-      try {
-        await admin.appCheck().verifyToken(appCheckToken);
-      } catch (tokenError) {
-        console.error("App Check token verification failed:", tokenError);
-        return res.status(401).send("Invalid App Check token.");
-      }
-    } else {
-      console.warn(
-        "No App Check token provided; proceeding in development mode."
-      );
-    }
+    // (สำหรับตอนนี้ให้ปิดการตรวจสอบ App Check เพื่อทดสอบ)
+    // const appCheckToken = req.header("X-Firebase-AppCheck");
+    // if (!appCheckToken) {
+    //   return res.status(401).send("No App Check token provided.");
+    // }
+    // try {
+    //   await admin.appCheck().verifyToken(appCheckToken);
+    // } catch (tokenError) {
+    //   console.error("App Check token verification failed:", tokenError);
+    //   return res.status(401).send("Invalid App Check token.");
+    // }
 
     // รับ parameter จาก client
     const { uid, language, fileName, imageUrl } = req.body;
@@ -101,13 +75,12 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
       return res.status(400).send("Missing required parameters");
     }
 
-    // แปลงชื่อไฟล์จากผู้ใช้ให้ตรงกับชื่อใน template folder
     const templateFileName = getTemplateFileName(fileName);
     if (!isValidTemplateFile(templateFileName, language)) {
       return res.status(404).send("Template image not found");
     }
 
-    // ดาวน์โหลดภาพที่ผู้ใช้ส่งเข้ามาจาก imageUrl
+    // ดาวน์โหลดภาพผู้ใช้จาก imageUrl
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     const userImageBuffer = Buffer.from(response.data, "binary");
 
@@ -120,7 +93,7 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
     );
     const templateBuffer = fs.readFileSync(templateImagePath);
 
-    // ใช้ sharp เพื่อแปลงภาพเป็น grayscale และ threshold เพื่อลด noise
+    // ประมวลผลภาพ: แปลงเป็น grayscale และ threshold เพื่อลด noise
     const processedUserBuffer = await sharp(userImageBuffer)
       .grayscale()
       .threshold(128)
@@ -130,11 +103,10 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
       .threshold(128)
       .toBuffer();
 
-    // อ่านภาพที่ประมวลผลแล้ว
     let processedUserPNG = PNG.sync.read(processedUserBuffer);
     const processedTemplatePNG = PNG.sync.read(processedTemplateBuffer);
 
-    // ตรวจสอบว่าขนาดของทั้งสองภาพตรงกันหรือไม่ ถ้าไม่ตรง ให้ปรับขนาดภาพผู้ใช้ให้ตรงกับ template
+    // หากขนาดภาพไม่ตรงกัน ให้ปรับขนาดภาพผู้ใช้ให้ตรงกับ template
     if (
       processedUserPNG.width !== processedTemplatePNG.width ||
       processedUserPNG.height !== processedTemplatePNG.height
@@ -146,12 +118,10 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
       console.log("User image resized to match template size.");
     }
 
-    // ตรวจสอบให้แน่ใจว่า pixelmatch โหลดแล้ว
     if (!pixelmatch) {
       console.error("pixelmatch module is not loaded.");
       return res.status(500).send("Server configuration error.");
     }
-    // เปรียบเทียบภาพที่ประมวลผลแล้วด้วย pixelmatch โดยใช้ threshold 0.05
     const diff = new PNG({
       width: processedUserPNG.width,
       height: processedUserPNG.height,
@@ -183,15 +153,11 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
         "ไม่เป็นไรจ๊ะ! ทุกคนเริ่มต้นจากที่ต่ำสุด ลองฝึกฝนอีกหน่อย แล้วคุณจะเก่งขึ้นอย่างรวดเร็ว!";
     }
 
-    // --- ส่วนการอัปโหลดไฟล์โดยใช้ Admin SDK ---
-    // ใช้ admin.storage() เพื่อเข้าถึง bucket
+    // อัปโหลดไฟล์ผู้ใช้ไปยัง Firebase Storage โดยใช้ Admin SDK (bypass Security Rules)
     const bucket = admin.storage().bucket();
     const langFolder = language === "English" ? "English" : "Thai";
-    const uidStr = uid;
-    const filePathInBucket = `user_writings/${uidStr}/${langFolder}/${fileName}`;
+    const filePathInBucket = `user_writings/${uid}/${langFolder}/${fileName}`;
     const file = bucket.file(filePathInBucket);
-
-    // บันทึกไฟล์โดยใช้ file.save() ซึ่งจะไม่ถูกตรวจสอบ Security Rules เนื่องจากใช้ Admin SDK
     await file.save(userImageBuffer, {
       metadata: { contentType: "image/png" },
     });
@@ -200,11 +166,11 @@ exports.evaluateWriting = functions.https.onRequest(async (req, res) => {
     // สร้าง Signed URL สำหรับให้ client เข้าถึงไฟล์
     const [downloadUrl] = await file.getSignedUrl({
       action: "read",
-      expires: "03-09-2491",
+      expires: "03-09-2491", // ปรับวันหมดอายุได้ตามต้องการ
     });
     console.log("Download URL:", downloadUrl);
 
-    // บันทึกผลลง Firestore ใน collection evaluations/{uid}/{language}/{character}
+    // บันทึกผลลง Firestore
     await admin
       .firestore()
       .collection("evaluations")

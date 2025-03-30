@@ -10,14 +10,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class WritingPracticePage extends StatefulWidget {
-  final String language; // "English" หรือ "Thai"
+  final String language;
   final String character;
 
-  const WritingPracticePage({
-    Key? key,
-    required this.language,
-    required this.character,
-  }) : super(key: key);
+  const WritingPracticePage(
+      {Key? key, required this.language, required this.character})
+      : super(key: key);
 
   @override
   _WritingPracticePageState createState() => _WritingPracticePageState();
@@ -30,17 +28,14 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   late ConfettiController _confettiController;
   final GlobalKey _repaintBoundaryKey = GlobalKey();
 
-  // อัปเดต Endpoint ให้เป็น URL จริงของ Cloud Function evaluateWriting
   final String cloudFunctionUrl =
       'https://us-central1-practice-writing-app-c6bd8.cloudfunctions.net/evaluateWriting';
 
   @override
   void initState() {
     super.initState();
-
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 3));
-
     if (widget.language.trim().toLowerCase() == 'english') {
       _charactersToPractice =
           List.generate(26, (index) => String.fromCharCode(index + 65));
@@ -98,27 +93,33 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   Future<String?> _getCurrentUserUID() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      user = (await FirebaseAuth.instance.signInAnonymously()).user;
+      try {
+        UserCredential credential =
+            await FirebaseAuth.instance.signInAnonymously();
+        user = credential.user;
+        print("Signed in anonymously: ${user?.uid}");
+      } catch (e) {
+        print("Anonymous sign-in failed: $e");
+        return null;
+      }
+    } else {
+      print("User already signed in: ${user.uid}");
     }
     return user?.uid;
   }
 
-  // ฟังก์ชันสำหรับอัปโหลดภาพและเรียก Cloud Function evaluateWriting
   Future<void> _uploadImageAndEvaluate() async {
     try {
       String? uid = await _getCurrentUserUID();
       if (uid == null) {
-        print("User not logged in, cannot upload image.");
+        print("User not authenticated, cannot upload image.");
         return;
       }
-
       final langFolder = widget.language.trim().toLowerCase() == 'english'
           ? 'English'
           : 'Thai';
       String character = _charactersToPractice[_currentCharacterIndex];
       String fileName = "writing_$character.png";
-
-      // จับภาพจาก RepaintBoundary
       RenderRepaintBoundary? boundary = _repaintBoundaryKey.currentContext
           ?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) {
@@ -133,8 +134,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         return;
       }
       Uint8List pngBytes = byteData.buffer.asUint8List();
-
-      // อัปโหลดภาพไปยัง Firebase Storage
       String uidStr = uid;
       Reference ref = FirebaseStorage.instance
           .ref()
@@ -144,7 +143,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
       String downloadUrl = await snapshot.ref.getDownloadURL();
       print("Image uploaded: $downloadUrl");
 
-      // เตรียมข้อมูลสำหรับเรียก Cloud Function
       Map<String, dynamic> body = {
         'uid': uidStr,
         'language': langFolder,
@@ -152,7 +150,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         'imageUrl': downloadUrl,
       };
 
-      // เรียก Cloud Function evaluateWriting ผ่าน HTTP POST
       http.Response response = await http.post(
         Uri.parse(cloudFunctionUrl),
         headers: {"Content-Type": "application/json"},
@@ -166,8 +163,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         print("Cloud Function error: ${response.statusCode} ${response.body}");
         return;
       }
-
-      // เปลี่ยนไปตัวอักษรถัดไป หรือไปหน้าประเมินผลเมื่อฝึกครบแล้ว
       _nextCharacter();
     } catch (e) {
       print("Error in upload and evaluate: $e");
@@ -218,10 +213,9 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'ฝึกเขียนตัวอักษร',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
+                const Text('ฝึกเขียนตัวอักษร',
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
                 RepaintBoundary(
                   key: _repaintBoundaryKey,
@@ -235,7 +229,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // แสดง template image สำหรับตัวอักษรที่ฝึก
                         Image.asset(
                           widget.language.trim().toLowerCase() == 'english'
                               ? 'assets/English/${_charactersToPractice[_currentCharacterIndex]}.png'
@@ -246,7 +239,6 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                           errorBuilder: (context, error, stackTrace) =>
                               const Text("ไม่มี Template สำหรับตัวอักษรนี้"),
                         ),
-                        // ให้ผู้ใช้วาดลายเส้น
                         GestureDetector(
                           onPanUpdate: (details) {
                             setState(() {
@@ -265,14 +257,12 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () => setState(() => points.clear()),
-                  child: const Text('เริ่มใหม่'),
-                ),
+                    onPressed: () => setState(() => points.clear()),
+                    child: const Text('เริ่มใหม่')),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _uploadImageAndEvaluate,
-                  child: const Text('บันทึกและประเมินผล'),
-                ),
+                    onPressed: _uploadImageAndEvaluate,
+                    child: const Text('บันทึกและประเมินผล')),
                 ConfettiWidget(
                   confettiController: _confettiController,
                   blastDirectionality: BlastDirectionality.explosive,
@@ -297,14 +287,12 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 class MyPainter extends CustomPainter {
   final List<Offset?> points;
   MyPainter(this.points);
-
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = Colors.black
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 5.0;
-
     for (int i = 0; i < points.length - 1; i++) {
       if (points[i] != null && points[i + 1] != null) {
         canvas.drawLine(points[i]!, points[i + 1]!, paint);
