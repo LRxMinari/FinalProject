@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'evaluation_page.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui' as ui;
@@ -28,6 +29,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   late ConfettiController _confettiController;
   final GlobalKey _repaintBoundaryKey = GlobalKey();
 
+  // URL ของ Cloud Function ที่ประเมินผล (ซึ่งใน Cloud Function นี้จะใช้ไฟล์ Mask ที่เตรียมไว้)
   final String cloudFunctionUrl =
       'https://us-central1-practice-writing-app-c6bd8.cloudfunctions.net/evaluateWriting';
 
@@ -90,6 +92,29 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
     _currentCharacterIndex = 0;
   }
 
+  // ตรวจสอบว่าเด็กวาดแล้วมีเส้นหรือไม่ (bad case)
+  bool isBadCase(List<Offset?> points) {
+    final validPoints = points.where((p) => p != null).cast<Offset>().toList();
+    if (validPoints.isEmpty) return true;
+    double minX = validPoints.first.dx;
+    double maxX = validPoints.first.dx;
+    double minY = validPoints.first.dy;
+    double maxY = validPoints.first.dy;
+    double totalLength = 0;
+    for (int i = 1; i < validPoints.length; i++) {
+      Offset prev = validPoints[i - 1];
+      Offset curr = validPoints[i];
+      totalLength += (curr - prev).distance;
+      if (curr.dx < minX) minX = curr.dx;
+      if (curr.dx > maxX) maxX = curr.dx;
+      if (curr.dy < minY) minY = curr.dy;
+      if (curr.dy > maxY) maxY = curr.dy;
+    }
+    double boundingBoxArea = (maxX - minX) * (maxY - minY);
+    print("BoundingBoxArea: $boundingBoxArea, TotalLength: $totalLength");
+    return (boundingBoxArea < 800 && totalLength > 300);
+  }
+
   Future<String?> _getCurrentUserUID() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -109,6 +134,12 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
   }
 
   Future<void> _uploadImageAndEvaluate() async {
+    if (isBadCase(points)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("การเขียนดูไม่ชัดเจน กรุณาเขียนใหม่!")),
+      );
+      return;
+    }
     try {
       String? uid = await _getCurrentUserUID();
       if (uid == null) {
@@ -158,10 +189,44 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
 
       if (response.statusCode == 200) {
         Map<String, dynamic> result = json.decode(response.body);
-        print("Evaluation successful: Score = ${result['score']}");
+        double score = result['score'];
+        String recommendation = result['recommendation'];
+        String status = result['status'];
+        print("Evaluation successful: Score = $score");
+        // ถ้าเป็นตัวสุดท้ายแล้ว ให้ไปหน้าประเมินผล
+        if (_currentCharacterIndex == _charactersToPractice.length - 1) {
+          // แสดงข้อความยินดีด้วย (ผ่าน SnackBar หรือปรับเป็นหน้าจอแยกได้)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "เยี่ยมมาก! คุณฝึกครบทุกตัวแล้ว",
+                style: GoogleFonts.itim(),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EvaluationPage(
+                language: widget.language,
+                character: character,
+              ),
+            ),
+          );
+        } else {
+          // ไม่ต้องแสดง popup สำหรับตัวที่ไม่ใช่ตัวสุดท้าย
+          print("ยังมีตัวอักษรให้ฝึกต่อไป");
+          // เคลียร์การวาดใหม่เพื่อฝึกตัวต่อไป
+          setState(() {
+            points.clear();
+          });
+        }
       } else {
         print("Cloud Function error: ${response.statusCode} ${response.body}");
-        return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("เกิดข้อผิดพลาดในการประเมินผล")),
+        );
       }
       _nextCharacter();
     } catch (e) {
@@ -176,15 +241,7 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
         points.clear();
       });
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EvaluationPage(
-            language: widget.language,
-            character: _charactersToPractice[_currentCharacterIndex],
-          ),
-        ),
-      );
+      // ถ้าฝึกครบทุกตัวแล้ว ก็ไปหน้าประเมิน (ซึ่งใน _uploadImageAndEvaluate จะจัดการแล้ว)
     }
   }
 
@@ -217,52 +274,69 @@ class _WritingPracticePageState extends State<WritingPracticePage> {
                     style:
                         TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
-                RepaintBoundary(
-                  key: _repaintBoundaryKey,
-                  child: Container(
-                    width: 350,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(252, 255, 209, 1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Image.asset(
-                          widget.language.trim().toLowerCase() == 'english'
-                              ? 'assets/English/${_charactersToPractice[_currentCharacterIndex]}.png'
-                              : 'assets/Thai/${_charactersToPractice[_currentCharacterIndex]}.jpg',
-                          width: 350,
-                          height: 200,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Text("ไม่มี Template สำหรับตัวอักษรนี้"),
-                        ),
-                        GestureDetector(
-                          onPanUpdate: (details) {
-                            setState(() {
-                              points.add(details.localPosition);
-                            });
-                          },
-                          onPanEnd: (_) => points.add(null),
-                          child: CustomPaint(
-                            size: const Size(350, 200),
-                            painter: MyPainter(points),
+                SizedBox(
+                  width: 400,
+                  height: 300,
+                  child: ClipRect(
+                    child: RepaintBoundary(
+                      key: _repaintBoundaryKey,
+                      child: Stack(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Image.asset(
+                              widget.language.trim().toLowerCase() == 'english'
+                                  ? 'assets/English/${_charactersToPractice[_currentCharacterIndex]}.png'
+                                  : 'assets/Thai/${_charactersToPractice[_currentCharacterIndex]}.jpg',
+                              width: 400,
+                              height: 300,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Text(
+                                      "ไม่มี Template สำหรับตัวอักษรนี้"),
+                            ),
                           ),
-                        ),
-                      ],
+                          GestureDetector(
+                            onPanUpdate: (details) {
+                              RenderBox box = _repaintBoundaryKey
+                                  .currentContext!
+                                  .findRenderObject() as RenderBox;
+                              Offset localPos =
+                                  box.globalToLocal(details.globalPosition);
+                              if (localPos.dx >= 0 &&
+                                  localPos.dx <= 400 &&
+                                  localPos.dy >= 0 &&
+                                  localPos.dy <= 300) {
+                                setState(() {
+                                  points.add(localPos);
+                                });
+                              }
+                            },
+                            onPanEnd: (_) {
+                              setState(() {
+                                points.add(null);
+                              });
+                            },
+                            child: CustomPaint(
+                              size: const Size(400, 300),
+                              painter: MyPainter(points),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                    onPressed: () => setState(() => points.clear()),
-                    child: const Text('เริ่มใหม่')),
+                  onPressed: () => setState(() => points.clear()),
+                  child: const Text('เริ่มใหม่'),
+                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                    onPressed: _uploadImageAndEvaluate,
-                    child: const Text('บันทึกและประเมินผล')),
+                  onPressed: _uploadImageAndEvaluate,
+                  child: const Text('บันทึกและประเมินผล'),
+                ),
                 ConfettiWidget(
                   confettiController: _confettiController,
                   blastDirectionality: BlastDirectionality.explosive,
@@ -292,7 +366,7 @@ class MyPainter extends CustomPainter {
     final paint = Paint()
       ..color = Colors.black
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 5.0;
+      ..strokeWidth = 22.0;
     for (int i = 0; i < points.length - 1; i++) {
       if (points[i] != null && points[i + 1] != null) {
         canvas.drawLine(points[i]!, points[i + 1]!, paint);
@@ -303,3 +377,78 @@ class MyPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
+
+List<String> thaiCharacters = [
+  "ก",
+  "ข",
+  "ฃ",
+  "ค",
+  "ฅ",
+  "ฆ",
+  "ง",
+  "จ",
+  "ฉ",
+  "ช",
+  "ซ",
+  "ญ",
+  "ฎ",
+  "ฏ",
+  "ฐ",
+  "ฑ",
+  "ฒ",
+  "ณ",
+  "ด",
+  "ต",
+  "ถ",
+  "ท",
+  "ธ",
+  "น",
+  "บ",
+  "ป",
+  "ผ",
+  "ฝ",
+  "พ",
+  "ฟ",
+  "ภ",
+  "ม",
+  "ย",
+  "ร",
+  "ล",
+  "ว",
+  "ศ",
+  "ษ",
+  "ส",
+  "ห",
+  "ฬ",
+  "อ",
+  "ฮ"
+];
+
+List<String> englishCharacters = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z"
+];

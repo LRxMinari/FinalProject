@@ -38,7 +38,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/Writing_1.png'), // พื้นหลัง
+          image: AssetImage('assets/Writing_1.png'),
           fit: BoxFit.cover,
         ),
       ),
@@ -53,7 +53,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                 fontSize: 70,
                 fontWeight: FontWeight.bold,
                 color: const Color.fromARGB(255, 109, 20, 0),
-                height: 1, // ลดระยะห่างระหว่างบรรทัด
+                height: 1,
               ),
             ),
             const SizedBox(height: 32),
@@ -74,7 +74,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundColor: const Color(0xFFCDE5D7), // สีเขียวอ่อน
+            backgroundColor: const Color(0xFFCDE5D7),
             child: Center(
               child: Text(
                 languageTH,
@@ -98,8 +98,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
       _selectedLanguage = language;
     });
 
-    String selectedLanguage = 'ภาษาไทย'; // หรือ 'English'
-    if (selectedLanguage.isEmpty) {
+    if (_selectedLanguage == null || _selectedLanguage!.isEmpty) {
       print("⚠️ Language is empty!");
     } else {
       Navigator.push(
@@ -107,7 +106,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
         MaterialPageRoute(
           builder: (context) => WritingPracticePage(
             language: language,
-            character: character,
+            character: character, // ส่งค่าตัวอักษรไปด้วย
           ),
         ),
       );

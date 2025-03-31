@@ -5,6 +5,7 @@ import 'register_page.dart';
 import 'forgetpassword_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,20 +21,13 @@ class _LoginPageState extends State<LoginPage> {
   String? _passwordError;
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _rememberMe = false; // ตัวเลือก "จดจำการเข้าสู่ระบบ"
 
   @override
   void initState() {
     super.initState();
-    // ตรวจสอบสถานะผู้ใช้ ถ้ามีผู้ใช้ล็อกอินอยู่แล้ว ให้ไปที่ HomePage ทันที
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user != null) {
-        // ถ้าผู้ใช้ล็อกอินอยู่แล้ว ให้รีไดเรคไปหน้า HomePage
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
-      }
-    });
+    // ลบการตรวจสอบสถานะผู้ใช้ที่ล็อกอินอยู่แล้วออกไป
+    // ตอนนี้จะให้ผู้ใช้เลือกว่าจะจดจำการเข้าสู่ระบบหรือไม่
   }
 
   bool _isValidEmail(String email) {
@@ -55,14 +49,22 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  void _login() async {
+  Future<void> _login() async {
     setState(() => _isLoading = true);
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      // เมื่อ login สำเร็จ authStateChanges listener จะรีไดเรคไปหน้า HomePage
+      // บันทึกค่า rememberMe ลงใน SharedPreferences หากผู้ใช้เลือก
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('rememberMe', _rememberMe);
+
+      // เมื่อ login สำเร็จ ให้ไปที่ HomePage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
       setState(() => _isLoading = false);
     } on FirebaseAuthException catch (e) {
       setState(() => _isLoading = false);
@@ -85,7 +87,13 @@ class _LoginPageState extends State<LoginPage> {
       final OAuthCredential credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
       await FirebaseAuth.instance.signInWithCredential(credential);
-      // authStateChanges listener จะรีไดเรคไปหน้า HomePage
+      // บันทึกค่า rememberMe (ในกรณี Google SignIn ก็สามารถบันทึกได้เช่นกัน)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('rememberMe', _rememberMe);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     } catch (e) {
       print("Google Sign-In Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -131,6 +139,26 @@ class _LoginPageState extends State<LoginPage> {
           if (label == "Password") _validatePassword(value);
         },
       ),
+    );
+  }
+
+  Widget _buildRememberMeCheckbox() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Checkbox(
+          value: _rememberMe,
+          onChanged: (value) {
+            setState(() {
+              _rememberMe = value ?? false;
+            });
+          },
+        ),
+        Text(
+          "จดจำการเข้าสู่ระบบ",
+          style: GoogleFonts.itim(fontSize: 16),
+        ),
+      ],
     );
   }
 
@@ -184,6 +212,9 @@ class _LoginPageState extends State<LoginPage> {
                     _buildTextField(_passwordController, 'Password',
                         'กรุณากรอกรหัสผ่าน', _passwordError,
                         isPassword: true),
+                    const SizedBox(height: 8),
+                    // Remember Me Checkbox
+                    _buildRememberMeCheckbox(),
                     const SizedBox(height: 8),
                     // Login button
                     SizedBox(
