@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:audioplayers/audioplayers.dart'; // เพิ่ม dependency audioplayers
+import 'package:audioplayers/audioplayers.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+
+// Global Audio Manager class สำหรับควบคุม AudioPlayer แบบ global
+class GlobalAudioManager {
+  static final AudioPlayer audioPlayer = AudioPlayer();
+}
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -18,60 +23,40 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isMusicOn = true;
   String _selectedLanguage = 'ภาษาไทย';
 
-  AudioPlayer _audioPlayer = AudioPlayer();
-  // URL หรือ path ของไฟล์เพลงใน assets (หรือสามารถใช้ AssetSource)
-  // สมมุติว่าเพลงอยู่ที่ assets/background_music.mp3
-  String musicPath = "assets/background_music.mp3";
-
   @override
   void initState() {
     super.initState();
-    // เริ่มเล่นเพลงถ้าตัวเลือกเปิดเพลงถูกเปิดไว้
-    if (_isMusicOn) {
-      _startMusic();
-    }
+    // สมมุติว่าเพลงพื้นหลังถูกเปิดแล้วจาก widget ชั้นบนสุด
   }
 
-  Future<void> _startMusic() async {
-    // เล่นเพลงใน loop ด้วย audioplayers (ใช้ setReleaseMode)
-    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    // เริ่มเล่นเพลงจาก assets (แน่ใจว่าได้ระบุใน pubspec.yaml แล้ว)
-    await _audioPlayer.play(AssetSource("background_music.mp3"),
-        volume: _volume);
-  }
-
-  Future<void> _stopMusic() async {
-    await _audioPlayer.stop();
-  }
-
-  void _toggleMusic(bool value) {
+  Future<void> _toggleMusic(bool value) async {
     setState(() {
       _isMusicOn = value;
     });
     if (_isMusicOn) {
-      _startMusic();
+      // เริ่มเพลงจาก global audio player
+      await GlobalAudioManager.audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await GlobalAudioManager.audioPlayer.play(
+        AssetSource("Old MacDonald Had A Farm.mp3"),
+        volume: _volume,
+      );
     } else {
-      _stopMusic();
+      await GlobalAudioManager.audioPlayer.stop();
     }
   }
 
-  void _changeVolume(double value) {
+  Future<void> _changeVolume(double value) async {
     setState(() {
       _volume = value;
     });
-    _audioPlayer.setVolume(_volume);
+    await GlobalAudioManager.audioPlayer.setVolume(_volume);
   }
 
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  Widget settingCard(
-      {required IconData icon,
-      required String title,
-      required Widget trailing}) {
+  Widget settingCard({
+    required IconData icon,
+    required String title,
+    required Widget trailing,
+  }) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -90,7 +75,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   Text(
                     title,
                     style: GoogleFonts.itim(
-                        fontSize: 20, fontWeight: FontWeight.w500),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -120,10 +107,13 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Text(
             'การตั้งค่า',
             style: GoogleFonts.mali(
-                fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black),
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
         ),
-        actions: [const SizedBox(width: 40)],
+        actions: const [SizedBox(width: 40)],
       ),
       body: Stack(
         children: [
@@ -198,8 +188,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           .map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
-                          child: Text(value,
-                              style: GoogleFonts.itim(fontSize: 18)),
+                          child: Text(
+                            value,
+                            style: GoogleFonts.itim(fontSize: 18),
+                          ),
                         );
                       }).toList(),
                     ),
@@ -212,7 +204,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const LoginPage()),
+                          builder: (context) => const LoginPage(),
+                        ),
                         (Route<dynamic> route) => false,
                       );
                     },
@@ -221,15 +214,17 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 50, vertical: 15),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25)),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
                       elevation: 5,
                     ),
                     child: Text(
                       'ออกจากระบบ',
                       style: GoogleFonts.fredoka(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],

@@ -1,8 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'screens/login_page.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 
 const FirebaseOptions firebaseOptions = FirebaseOptions(
   apiKey: "AIzaSyBUaN_bf7E9uWUS1Uo70d6U44S1ShetHzk",
@@ -19,9 +20,7 @@ Future<void> main() async {
   try {
     if (kIsWeb) {
       await Firebase.initializeApp(options: firebaseOptions);
-      await FirebaseAppCheck.instance.activate(
-          // webRecaptchaSiteKey: 'YOUR_WEB_RECAPTCHA_SITE_KEY', // Uncomment if using web
-          );
+      await FirebaseAppCheck.instance.activate();
     } else {
       await Firebase.initializeApp();
       await FirebaseAppCheck.instance.activate();
@@ -32,14 +31,44 @@ Future<void> main() async {
   }
 }
 
-class PracticeWritingApp extends StatelessWidget {
+class PracticeWritingApp extends StatefulWidget {
   const PracticeWritingApp({Key? key}) : super(key: key);
 
   @override
+  _PracticeWritingAppState createState() => _PracticeWritingAppState();
+}
+
+class _PracticeWritingAppState extends State<PracticeWritingApp> {
+  late AudioPlayer _audioPlayer;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _startBackgroundMusic();
+  }
+
+  Future<void> _startBackgroundMusic() async {
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(
+      AssetSource("Old MacDonald Had A Farm.mp3"),
+      volume: 0.5,
+    );
+  }
+
+  @override
+  void dispose() {
+    // ปล่อยทรัพยากรเมื่อแอปปิด (แต่ widget นี้จะอยู่ตลอดการใช้งานแอป)
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    // MaterialApp นี้จะครอบคลุมแอปทั้งแอป
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      home: LoginPage(), // หน้าแรกที่ต้องการให้แสดง (เช่น LoginPage)
     );
   }
 }
